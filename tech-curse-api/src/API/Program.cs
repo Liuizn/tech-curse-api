@@ -6,6 +6,7 @@ using System.Text;
 using tech_curse_api.src.Application.Interfaces;
 using tech_curse_api.src.Application.Services;
 using tech_curse_api.src.Infrastructure.Data;
+using tech_curse_api.src.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<ICourseService, CourseService>();
+builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 
 builder.Services.AddControllers();
 

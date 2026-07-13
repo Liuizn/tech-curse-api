@@ -1,13 +1,12 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using tech_curse_api.src.Application.DTOs;
 using tech_curse_api.src.Application.Interfaces;
-using tech_curse_api.src.Application.Services;
+
 
 namespace tech_curse_api.src.API.Controllers;
 
 [ApiController]
-[Route("tech-curse/auth")]
+[Route("tech-curse/[controller]")]
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;

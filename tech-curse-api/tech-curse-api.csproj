@@ -36,7 +36,6 @@
     <Folder Include="src\Domain\Enums\" />
     <Folder Include="src\Domain\Exceptions\" />
     <Folder Include="src\Infrastructure\Mapping\" />
-    <Folder Include="src\Infrastructure\Repositories\" />
     <Folder Include="tests\" />
   </ItemGroup>
 
