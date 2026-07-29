@@ -26,17 +26,17 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="8.0.29" />
+    <PackageReference Include="StackExchange.Redis" Version="3.0.17" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="src\API\Configuration\" />
     <Folder Include="src\API\Middleware\" />
     <Folder Include="src\Application\Validators\" />
     <Folder Include="src\Domain\Enums\" />
     <Folder Include="src\Domain\Exceptions\" />
     <Folder Include="src\Infrastructure\Mapping\" />
-    <Folder Include="src\Infrastructure\Repositories\" />
     <Folder Include="tests\" />
   </ItemGroup>
 

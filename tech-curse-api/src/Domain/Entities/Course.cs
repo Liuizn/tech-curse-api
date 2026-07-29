@@ -8,6 +8,5 @@ public class Course
     public string Categoria { get; set; }
     public int CargaHoraria { get; set; }
     public DateTime DataCriacao { get; set; }
-
     public ICollection<Enrollment> Enrollments { get; set; } = new List<Enrollment>();
 }

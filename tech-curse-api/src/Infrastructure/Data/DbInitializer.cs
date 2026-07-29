@@ -44,5 +44,28 @@ public static class DbInitializer
                 await userManager.AddToRoleAsync(newAdmin, "Admin");
             }
         }
+
+        // Instrutor Padrão
+        var instrutorEmail = "instrutor@gmail.com";
+        var instrutorUser = await userManager.FindByEmailAsync(instrutorEmail);
+
+        if (instrutorUser == null)
+        {
+            var newInstrutor = new IdentityUser
+            {
+                UserName = instrutorEmail,
+                Email = instrutorEmail,
+                EmailConfirmed = true
+            };
+
+            string instrutorPassword = "Instrutor@123456";
+
+            var createInstrutorResult = await userManager.CreateAsync(newInstrutor, instrutorPassword);
+
+            if (createInstrutorResult.Succeeded)
+            {
+                await userManager.AddToRoleAsync(newInstrutor, "Instructor");
+            }
+        }
     }
 }
