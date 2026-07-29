@@ -44,7 +44,5 @@ public class AuthController : ControllerBase
         if (refreshResult == null) return Unauthorized("Refresh Token inválido ou expirado.");
 
         return Ok(refreshResult);
-
-        
     }
 }

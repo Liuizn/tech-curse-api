@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using tech_curse_api.src.Application.DTOs;
 using tech_curse_api.src.Application.Interfaces;
 using tech_curse_api.src.Domain.Entities;
 using tech_curse_api.src.Infrastructure.Data;
@@ -12,6 +13,47 @@ public class CourseRepository : ICourseRepository
     public CourseRepository(TechCurseContext context)
     {
         _context = context;
+    }
+
+    public async Task<(IEnumerable<Course> Items, int TotalCount)> GetPagedAsync(CoursePaginationParamsDto searchParams)
+    {
+        var query = _context.Courses.AsQueryable().AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(searchParams.Categoria))
+        {
+            query = query.Where(c => c.Categoria == searchParams.Categoria);
+        }
+
+        var totalCount = await query.CountAsync();
+
+        query = ApplySorting(query, searchParams.SortBy, searchParams.SortDirection);
+
+        var items = await query
+            .Skip((searchParams.PageNumber - 1) * searchParams.PageSize)
+            .Take(searchParams.PageSize)
+            .ToListAsync();
+
+        return (items, totalCount);
+    }
+
+    private IQueryable<Course> ApplySorting(IQueryable<Course> query, string sortBy, string sortDirection)
+    {
+        var isDescending = sortDirection.Equals("desc", StringComparison.OrdinalIgnoreCase);
+
+        return (sortBy.ToLower(), isDescending) switch
+        {
+            ("titulo", false) => query.OrderBy(c => c.Titulo),
+            ("titulo", true) => query.OrderByDescending(c => c.Titulo),
+
+            ("categoria", false) => query.OrderBy(c => c.Categoria),
+            ("categoria", true) => query.OrderByDescending(c => c.Categoria),
+
+            ("datacriacao", false) => query.OrderBy(c => c.DataCriacao),
+            ("datacriacao", true) => query.OrderByDescending(c => c.DataCriacao),
+
+            // Fallback padrão se passarem uma propriedade inválida ou vazia
+            _ => isDescending ? query.OrderByDescending(c => c.CourseId) : query.OrderBy(c => c.CourseId)
+        };
     }
 
     public async Task<IEnumerable<Course>> GetAllAsync()

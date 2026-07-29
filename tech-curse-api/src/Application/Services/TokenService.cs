@@ -59,8 +59,7 @@ public class TokenService : ITokenService
     }
 
     public ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
-    {
-        // Puxa a chave secreta definida nas variáveis de ambiente / user-secrets
+    {        
         var key = Encoding.ASCII.GetBytes(_configuration["Jwt:SigningKey"]!);
 
         var tokenValidationParameters = new TokenValidationParameters
