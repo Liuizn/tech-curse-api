@@ -20,17 +20,16 @@ public class AuthService : IAuthService
 
     public async Task<bool> RegisterAsync(RegisterInputDto input)
     {
-        var user = new IdentityUser { UserName = input.Email, Email = input.Email };
+        var user = new IdentityUser { UserName = input.Name, Email = input.Email };
         var result = await _userManager.CreateAsync(user, input.Password);
 
-        if (result.Succeeded)
-        {
-            // Vincula o novo usuário ao papel padrão de "Student"
-            await _userManager.AddToRoleAsync(user, "Student");
-            return true;
-        }
+        if (result.Succeeded == false) return false;
 
-        return false;
+        string roleName = input.Role.ToString();
+
+        await _userManager.AddToRoleAsync(user, roleName);
+
+        return true;
     }
 
     public async Task<AuthOutputDto?> LoginAsync(LoginInputDto input)

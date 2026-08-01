@@ -5,7 +5,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Text.Json;
+using tech_curse_api.src.Application.Interfaces;
 using tech_curse_api.src.Infrastructure.Data;
+using tech_curse_api.src.Infrastructure.Identity;
 
 namespace tech_curse_api.src.API.Configuration;
 
@@ -15,6 +17,9 @@ public static class IdentityAuthenticationSetup
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
+
         // 1. Configuração do Identity
         services.AddIdentityCore<IdentityUser>(options =>
         {

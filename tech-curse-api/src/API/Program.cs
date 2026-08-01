@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using StackExchange.Redis;
+using System.Text.Json.Serialization;
 using tech_curse_api.src.API.Configuration;
 using tech_curse_api.src.Application.Interfaces;
 using tech_curse_api.src.Application.Services;
@@ -16,7 +17,11 @@ builder.Services.AddScoped<ICacheService, RedisCacheService>();
 builder.Services.AddScoped<ICourseService, CourseService>();
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 
 var apiConnectionString =
     builder.Configuration.GetConnectionString("APITechCurse")

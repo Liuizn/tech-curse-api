@@ -1,6 +1,8 @@
-﻿namespace tech_curse_api.src.Application.DTOs;
+﻿using tech_curse_api.src.Domain.Enums;
 
-public record RegisterInputDto(string Name, string Email, string Password, string ConfirmPassword);
+namespace tech_curse_api.src.Application.DTOs;
+
+public record RegisterInputDto(string Name, string Email, UserRole Role, string Password, string ConfirmPassword);
 public record LoginInputDto(string Email, string Password);
 public record RefreshTokenInputDto(string AccessToken, string RefreshToken);
 public record TokenOutputDto(string AccessToken, DateTime ExpiresAt);

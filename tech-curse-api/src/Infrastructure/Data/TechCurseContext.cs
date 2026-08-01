@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
 using tech_curse_api.src.Domain.Entities;
 
 namespace tech_curse_api.src.Infrastructure.Data;
@@ -17,6 +18,8 @@ public class TechCurseContext : IdentityDbContext<IdentityUser>
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
-        base.OnModelCreating(builder);        
+        base.OnModelCreating(builder);
+
+        builder.Entity<Student>().HasQueryFilter(s => !s.IsDeleted);
     }
 }
