@@ -36,7 +36,7 @@ public class CourseRepository : ICourseRepository
         return (items, totalCount);
     }
 
-    private IQueryable<Course> ApplySorting(IQueryable<Course> query, string sortBy, string sortDirection)
+    private static IQueryable<Course> ApplySorting(IQueryable<Course> query, string sortBy, string sortDirection)
     {
         var isDescending = sortDirection.Equals("desc", StringComparison.OrdinalIgnoreCase);
 

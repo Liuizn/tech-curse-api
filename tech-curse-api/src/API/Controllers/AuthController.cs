@@ -22,8 +22,12 @@ public class AuthController : ControllerBase
         if (input.Password != input.ConfirmPassword)
             return BadRequest("As senhas não coincidem.");
 
-        var success = await _authService.RegisterAsync(input);
-        if (!success) return BadRequest("Erro ao registrar usuário.");
+        var actionResult = await _authService.RegisterAsync(input);
+
+        if (actionResult.status == false)
+        {
+            return BadRequest(new { message = "Erro ao registrar usuário.", errors = actionResult.JSON });
+        }
 
         return StatusCode(201, "Usuário registrado com sucesso.");
     }

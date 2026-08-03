@@ -35,6 +35,9 @@ public class StudentRepository : IStudentRepository
     public async Task<Student?> GetByIdAsync(int id)
         => await _context.Students.FindAsync(id);
 
+    public async Task<Student?> GetByEmailAsync(string email)
+        => await _context.Students.FirstOrDefaultAsync(s => s.Email == email);
+
     public async Task AddAsync(Student student)
     {
         await _context.Students.AddAsync(student);
@@ -51,5 +54,10 @@ public class StudentRepository : IStudentRepository
     {
         _context.Students.Remove(student);
         await _context.SaveChangesAsync();
+    }
+
+    public async Task<bool> EmailExistsAsync(string email)
+    {
+        return await _context.Students.AnyAsync(s => s.Email == email);
     }
 }

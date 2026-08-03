@@ -20,6 +20,13 @@ public class CurrentUserService : ICurrentUserService
         return user?.FindFirstValue(ClaimTypes.NameIdentifier);
     }
 
+    public string? GetUserEmail()
+    {
+        var user = _httpContextAccessor.HttpContext?.User;
+
+        return user?.FindFirstValue(ClaimTypes.Email);
+    }
+
     public bool IsInRole(UserRole roleName)
         => _httpContextAccessor.HttpContext?.User?.IsInRole(roleName.ToString()) ?? false;
 }

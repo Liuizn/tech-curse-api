@@ -1,13 +1,13 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿ using Microsoft.AspNetCore.Identity;
 using StackExchange.Redis;
 using System.Security.Claims;
 using tech_curse_api.src.Application.DTOs;
 using tech_curse_api.src.Application.Interfaces;
 using tech_curse_api.src.Domain.Entities;
 using tech_curse_api.src.Domain.Enums;
+using tech_curse_api.src.Domain.Exceptions;
 
 namespace tech_curse_api.src.Application.Services;
-// UNDONE: Implement the UpdateAsync and DeleteAsync methods for the StudentService class, similar to the CourseService class, ensuring that they handle caching appropriately and return the correct types.
 public class StudentService : IStudentService
 {
     private readonly IStudentRepository _studentRepository;
@@ -18,8 +18,12 @@ public class StudentService : IStudentService
     private const string STUDENT_ITEM_PREFIX = "students:item:";
     private const string STUDENT_LIST_PREFIX = "students:list:";
 
-    public StudentService(IStudentRepository studentRepository, ICacheService cacheService, UserManager<IdentityUser> userManager, ICurrentUserService currentUserService)
-    {
+    public StudentService(
+        IStudentRepository studentRepository,
+        ICacheService cacheService,
+        UserManager<IdentityUser> userManager,
+        ICurrentUserService currentUserService
+    ) {
         _studentRepository = studentRepository;
         _cacheService = cacheService;
         _userManager = userManager;
@@ -52,12 +56,15 @@ public class StudentService : IStudentService
         return result;
     }
 
-    protected async Task<bool> validateRoleAcess(string targetIdentityUserId)
+    protected async Task<bool> ValidateRoleAcess(string targetIdentityUserId)
     {
         var currentUserId = _currentUserService.GetUserId();
         var isAdmin = _currentUserService.IsInRole(UserRole.Admin);
 
-        if (currentUserId != targetIdentityUserId && !isAdmin) return false;
+        if (currentUserId != targetIdentityUserId && !isAdmin)
+        {
+            throw new NotAllowedException("Você não possuí permissão suficiente para acessar registro!");
+        }
 
         return true;
     }
@@ -76,7 +83,7 @@ public class StudentService : IStudentService
 
         if (student == null) return null;
 
-        if (await validateRoleAcess(student.IdentityUserId) == false) return null;
+        await ValidateRoleAcess(student.IdentityUserId);
 
         var result = new StudentOutputDto(student.StudentId, student.Nome, student.Email, student.DataCadastro, student.Enrollments);
 
@@ -85,8 +92,27 @@ public class StudentService : IStudentService
         return result;
     }
 
+    public async Task<StudentOutputDto?> GetSelf()
+    {
+        var currentUserEmail = _currentUserService.GetUserEmail();
+
+        var student = await _studentRepository.GetByEmailAsync(currentUserEmail);
+
+        if (student == null) return null;
+
+        var result = new StudentOutputDto(student.StudentId, student.Nome, student.Email, student.DataCadastro, student.Enrollments);
+
+        return result;
+    }
+
     public async Task<StudentOutputDto> CreateAsync(StudentPostDto dto)
     {
+        bool emailExists = await _studentRepository.EmailExistsAsync(dto.Email);
+        if (emailExists)
+        {
+            throw new ConflictException("O e-mail informado já está em uso por outro estudante.");
+        }
+
         var user = await _userManager.FindByEmailAsync(dto.Email);
         if (user == null)
         {
@@ -97,9 +123,10 @@ public class StudentService : IStudentService
         {
             Nome = dto.Nome,
             Email = dto.Email,
-            DataCadastro = dto.DataCadastro,
+            DataCadastro = DateTime.UtcNow,
             IdentityUserId = user.Id,
             IdentityUser = user,
+            IsDeleted = false,
             Enrollments = new List<Enrollment>()
         };
 
@@ -110,20 +137,20 @@ public class StudentService : IStudentService
         return result;
     }
     
-    public async Task<bool> UpdateAsync(StudentPutDto dto)
+    public async Task<bool> UpdateAsync(int id, StudentPutDto dto)
     {
-        var student = await _studentRepository.GetByIdAsync(dto.Id);
+        var student = await _studentRepository.GetByIdAsync(id);
 
         if (student == null) return false;
 
-        if (await validateRoleAcess(student.IdentityUserId) == false) return false;
+        await ValidateRoleAcess(student.IdentityUserId);
 
         student.Nome = dto.Nome;
 
         await _studentRepository.UpdateAsync(student);
 
         var updatedDto = new StudentOutputDto(student.StudentId, student.Nome, student.Email, student.DataCadastro, student.Enrollments);
-        await _cacheService.SetAsync($"{STUDENT_ITEM_PREFIX}{dto.Id}", updatedDto, TimeSpan.FromMinutes(15));
+        await _cacheService.SetAsync($"{STUDENT_ITEM_PREFIX}{id}", updatedDto, TimeSpan.FromMinutes(15));
 
         await _cacheService.RemoveByPrefixAsync(STUDENT_LIST_PREFIX);
 
@@ -140,6 +167,8 @@ public class StudentService : IStudentService
         student.DeletedAt = DateTime.UtcNow;
 
         await _studentRepository.UpdateAsync(student);
+
+        await _userManager.SetLockoutEndDateAsync(student.IdentityUser, DateTimeOffset.MaxValue);
 
         await _cacheService.RemoveAsync($"{STUDENT_ITEM_PREFIX}{id}");
         await _cacheService.RemoveByPrefixAsync(STUDENT_LIST_PREFIX);

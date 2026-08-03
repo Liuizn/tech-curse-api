@@ -20,6 +20,8 @@ public class TechCurseContext : IdentityDbContext<IdentityUser>
     {
         base.OnModelCreating(builder);
 
+        builder.ApplyConfigurationsFromAssembly(typeof(TechCurseContext).Assembly);
+
         builder.Entity<Student>().HasQueryFilter(s => !s.IsDeleted);
     }
 }

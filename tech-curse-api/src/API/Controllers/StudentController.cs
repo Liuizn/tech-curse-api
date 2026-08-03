@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-using System.Security.Claims;
 using tech_curse_api.src.Application.DTOs;
 using tech_curse_api.src.Application.Interfaces;
-using tech_curse_api.src.Domain.Enums;
 
 namespace tech_curse_api.src.API.Controllers
 {
@@ -45,13 +43,22 @@ namespace tech_curse_api.src.API.Controllers
             return result is not null ? Ok(result) : NotFound();
         }
 
+        [HttpGet("me")]
+        [Authorize(Roles = "Student")]
+        public async Task<IActionResult> GetSelf()
+        {
+            var result = await _studentService.GetSelf();
+
+            return Ok(result);
+        }
+
         [HttpPut("{id}")]
         [Authorize]
         public async Task<IActionResult> Put(int id, [FromBody] StudentPutDto input)
         {
-            StudentPutDto dto = new StudentPutDto(id, input.Nome);
+            StudentPutDto dto = new StudentPutDto(input.Nome);
 
-            var result = await _studentService.UpdateAsync(dto);
+            var result = await _studentService.UpdateAsync(id, dto);
 
             return result ? NoContent() : NotFound();
         }

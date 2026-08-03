@@ -7,6 +7,7 @@ public interface IStudentService
     Task<StudentOutputDto> CreateAsync(StudentPostDto dto);
     Task<PagedResultDto<StudentOutputDto>> GetPagedAsync(PaginationParamsDto searchParams);
     Task<StudentOutputDto?> GetByIdAsync(int id);
-    Task<bool> UpdateAsync(StudentPutDto dto);
+    Task<StudentOutputDto?> GetSelf();
+    Task<bool> UpdateAsync(int id, StudentPutDto dto);
     Task<bool> DeleteAsync(int id);
 }
