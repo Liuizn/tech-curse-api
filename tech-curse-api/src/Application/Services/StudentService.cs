@@ -42,7 +42,7 @@ public class StudentService : IStudentService
 
         var (courses, totalCount) = await _studentRepository.GetPagedAsync(searchParams);
 
-        var dtos = courses.Select(c => new StudentOutputDto(c.StudentId, c.Nome, c.Email, c.DataCadastro, c.Enrollments));
+        var dtos = courses.Select(c => new StudentOutputDto(c.StudentId, c.Nome, c.Email, c.DataCadastro));
         
         var result = new PagedResultDto<StudentOutputDto>(
             dtos,
@@ -85,14 +85,14 @@ public class StudentService : IStudentService
 
         await ValidateRoleAcess(student.IdentityUserId);
 
-        var result = new StudentOutputDto(student.StudentId, student.Nome, student.Email, student.DataCadastro, student.Enrollments);
+        var result = new StudentOutputDto(student.StudentId, student.Nome, student.Email, student.DataCadastro);
 
         await _cacheService.SetAsync(cacheKey, result, TimeSpan.FromMinutes(15));
 
         return result;
     }
 
-    public async Task<StudentOutputDto?> GetSelf()
+    public async Task<StudentOutputDto?> GetSelfAsync()
     {
         var currentUserEmail = _currentUserService.GetUserEmail();
 
@@ -100,9 +100,19 @@ public class StudentService : IStudentService
 
         if (student == null) return null;
 
-        var result = new StudentOutputDto(student.StudentId, student.Nome, student.Email, student.DataCadastro, student.Enrollments);
+        var result = new StudentOutputDto(student.StudentId, student.Nome, student.Email, student.DataCadastro);
 
         return result;
+    }
+
+    public async Task<IEnumerable<CourseStudentOutputDto>> GetCoursesAsync(int id)
+    {
+        var student = await _studentRepository.GetByIdAsync(id);
+        if (student == null) return null;
+
+        await ValidateRoleAcess(student.IdentityUserId);
+
+        return await _studentRepository.GetCoursesAsync(student);
     }
 
     public async Task<StudentOutputDto> CreateAsync(StudentPostDto dto)
@@ -133,7 +143,7 @@ public class StudentService : IStudentService
 
         await _studentRepository.AddAsync(student);
 
-        var result = new StudentOutputDto(student.StudentId, student.Nome, student.Email, student.DataCadastro, student.Enrollments);
+        var result = new StudentOutputDto(student.StudentId, student.Nome, student.Email, student.DataCadastro);
 
         return result;
     }
@@ -150,7 +160,7 @@ public class StudentService : IStudentService
 
         await _studentRepository.UpdateAsync(student);
 
-        var updatedDto = new StudentOutputDto(student.StudentId, student.Nome, student.Email, student.DataCadastro, student.Enrollments);
+        var updatedDto = new StudentOutputDto(student.StudentId, student.Nome, student.Email, student.DataCadastro);
         await _cacheService.SetAsync($"{STUDENT_ITEM_PREFIX}{id}", updatedDto, TimeSpan.FromMinutes(15));
 
         await _cacheService.RemoveByPrefixAsync(STUDENT_LIST_PREFIX);
@@ -175,5 +185,10 @@ public class StudentService : IStudentService
         await _cacheService.RemoveByPrefixAsync(STUDENT_LIST_PREFIX);
 
         return true;
+    }
+
+    public async Task<bool> StudentIsActiveAsync(Student student)
+    {
+        return await _studentRepository.StudentIsActiveAsync(student);
     }
 }

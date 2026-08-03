@@ -43,11 +43,20 @@ namespace tech_curse_api.src.API.Controllers
             return result is not null ? Ok(result) : NotFound();
         }
 
+        [HttpGet("{id}/enrollments")]
+        [Authorize]
+        public async Task<IActionResult> GetEnrollments(int id)
+        {
+            var result = await _studentService.GetCoursesAsync(id);
+
+            return result is not null ? Ok(result) : NotFound();
+        }
+
         [HttpGet("me")]
         [Authorize(Roles = "Student")]
         public async Task<IActionResult> GetSelf()
         {
-            var result = await _studentService.GetSelf();
+            var result = await _studentService.GetSelfAsync();
 
             return Ok(result);
         }
