@@ -24,7 +24,7 @@ public class AuthController : ControllerBase
 
         var actionResult = await _authService.RegisterAsync(input);
 
-        if (actionResult.status == false)
+        if (!actionResult.status)
         {
             return BadRequest(new { message = "Erro ao registrar usuário.", errors = actionResult.JSON });
         }

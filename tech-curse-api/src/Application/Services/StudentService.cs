@@ -114,9 +114,10 @@ public class StudentService : IStudentService
         }
 
         var user = await _userManager.FindByEmailAsync(dto.Email);
+
         if (user == null)
         {
-            throw new Exception("User not found");
+            throw new ConflictException("Usuário não encontrado.");
         }
 
         var student = new Student
