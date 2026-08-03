@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using StackExchange.Redis;
+using System.Text.Json.Serialization;
 using tech_curse_api.src.API.Configuration;
+using tech_curse_api.src.API.Middleware;
 using tech_curse_api.src.Application.Interfaces;
 using tech_curse_api.src.Application.Services;
 using tech_curse_api.src.Infrastructure.Data;
@@ -15,8 +17,14 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<ICacheService, RedisCacheService>();
 builder.Services.AddScoped<ICourseService, CourseService>();
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
+builder.Services.AddScoped<IStudentService, StudentService>();
+builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 
 var apiConnectionString =
     builder.Configuration.GetConnectionString("APITechCurse")
@@ -46,12 +54,14 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 builder.Services.AddAuthorization();
 
 builder.Services.AddEndpointsApiExplorer();
+string securitySchemeName = "Bearer";
+
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Tech Curse API", Version = "v1" });
 
     // 1. Define o esquema de segurança (Cria o botão "Authorize" no Swagger)
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    c.AddSecurityDefinition(securitySchemeName, new OpenApiSecurityScheme
     {
         Description = @"Cabeçalho de autorização JWT usando o esquema Bearer. 
                       Escreva 'Bearer' [espaço] e em seguida o seu token na caixa de texto abaixo.
@@ -59,7 +69,7 @@ builder.Services.AddSwaggerGen(c =>
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
+        Scheme = securitySchemeName
     });
 
     // 2. Aplica o requisito de segurança globalmente nos endpoints
@@ -71,10 +81,10 @@ builder.Services.AddSwaggerGen(c =>
                 Reference = new OpenApiReference
                 {
                     Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
+                    Id = securitySchemeName
                 },
                 Scheme = "oauth2",
-                Name = "Bearer",
+                Name = securitySchemeName,
                 In = ParameterLocation.Header,
             },
             new List<string>()
@@ -83,6 +93,8 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

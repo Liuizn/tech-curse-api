@@ -78,7 +78,7 @@ public class CourseService : ICourseService
             Descricao = dto.Descricao,
             Categoria = dto.Categoria,
             CargaHoraria = dto.CargaHoraria,
-            DataCriacao = dto.DataCriacao
+            DataCriacao = DateTime.UtcNow
         };
 
         await _courseRepository.AddAsync(course);

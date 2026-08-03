@@ -32,10 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="src\API\Middleware\" />
     <Folder Include="src\Application\Validators\" />
-    <Folder Include="src\Domain\Enums\" />
-    <Folder Include="src\Domain\Exceptions\" />
     <Folder Include="src\Infrastructure\Mapping\" />
     <Folder Include="tests\" />
   </ItemGroup>

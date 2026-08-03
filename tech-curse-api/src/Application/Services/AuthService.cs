@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
+using System.Text.Json;
 using tech_curse_api.src.Application.DTOs;
 using tech_curse_api.src.Application.Interfaces;
 
@@ -18,19 +19,30 @@ public class AuthService : IAuthService
         _tokenService = tokenService;
     }
 
-    public async Task<bool> RegisterAsync(RegisterInputDto input)
+    public async Task<(bool status, string JSON)> RegisterAsync(RegisterInputDto input)
     {
-        var user = new IdentityUser { UserName = input.Email, Email = input.Email };
+        List<string> errorList = new List<string>();
+
+        var user = new IdentityUser { UserName = input.Name, Email = input.Email };
         var result = await _userManager.CreateAsync(user, input.Password);
 
-        if (result.Succeeded)
+        if (result.Succeeded == false)
         {
-            // Vincula o novo usuário ao papel padrão de "Student"
-            await _userManager.AddToRoleAsync(user, "Student");
-            return true;
+            foreach (var error in result.Errors)
+            {
+                errorList.Add($"Código: {error.Code} | Detalhe: {error.Description}");
+            }
+
+            string json = JsonSerializer.Serialize(errorList, new JsonSerializerOptions{ WriteIndented = true });
+
+            return (false, json);
         }
 
-        return false;
+        string roleName = input.Role.ToString();
+
+        await _userManager.AddToRoleAsync(user, roleName);
+
+        return (true, "");
     }
 
     public async Task<AuthOutputDto?> LoginAsync(LoginInputDto input)
