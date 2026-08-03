@@ -38,6 +38,22 @@ public class StudentRepository : IStudentRepository
     public async Task<Student?> GetByEmailAsync(string email)
         => await _context.Students.FirstOrDefaultAsync(s => s.Email == email);
 
+    public async Task<IEnumerable<CourseStudentOutputDto>> GetCoursesAsync(Student student)
+    {
+        var courses = await _context.Enrollments
+            .Where(e => e.StudentId == student.StudentId)
+            .Select(e => new CourseStudentOutputDto(
+                e.CourseId,
+                e.Course.Titulo,
+                e.Course.Descricao,
+                e.Course.Categoria,
+                e.Status
+            ))
+            .ToListAsync();
+
+        return courses;
+    }
+
     public async Task AddAsync(Student student)
     {
         await _context.Students.AddAsync(student);
@@ -59,5 +75,10 @@ public class StudentRepository : IStudentRepository
     public async Task<bool> EmailExistsAsync(string email)
     {
         return await _context.Students.AnyAsync(s => s.Email == email);
+    }
+
+    public async Task<bool> StudentIsActiveAsync(Student student)
+    {
+        return await _context.Students.Where(s => s.StudentId == student.StudentId && s.IsDeleted == false).AnyAsync();
     }
 }
