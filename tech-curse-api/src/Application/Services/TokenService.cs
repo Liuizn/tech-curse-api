@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using tech_curse_api.src.Application.DTOs;
 using tech_curse_api.src.Application.Interfaces;
+using tech_curse_api.src.Domain.Exceptions;
 
 namespace tech_curse_api.src.Application.Services;
 
@@ -79,7 +80,7 @@ public class TokenService : ITokenService
         if (securityToken is not JwtSecurityToken jwtSecurityToken ||
             !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
         {
-            throw new SecurityTokenException("Token inválido");
+            throw new ForbiddenAccessException("Token inválido");
         }
 
         return principal;

@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Text.Json;
 using tech_curse_api.src.Application.Interfaces;
+using tech_curse_api.src.Domain.Exceptions;
 using tech_curse_api.src.Infrastructure.Data;
 using tech_curse_api.src.Infrastructure.Identity;
 
@@ -73,43 +74,18 @@ public static class IdentityAuthenticationSetup
 
                 ClockSkew = TimeSpan.Zero
             };
+
             options.Events = new JwtBearerEvents
             {
-                // Intercepta o erro 403 (Proibido - Sem permissão/Role)
-                OnForbidden = context =>
-                {
-                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
-                    context.Response.ContentType = "application/json";
-
-                    var errorResponse = new
-                    {
-                        statusCode = 403,
-                        error = "Forbidden",
-                        message = "Acesso negado. Você não possui os privilégios necessários para acessar este recurso."
-                    };
-
-                    var jsonResult = JsonSerializer.Serialize(errorResponse);
-                    return context.Response.WriteAsync(jsonResult);
-                },
-
-                // BÔNUS: Você também pode padronizar o erro 401 (Não Autorizado - Sem token ou token inválido)
                 OnChallenge = context =>
                 {
-                    // Impede que o ASP.NET retorne o erro 401 vazio padrão
                     context.HandleResponse();
 
-                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                    context.Response.ContentType = "application/json";
-
-                    var errorResponse = new
-                    {
-                        statusCode = 401,
-                        error = "Unauthorized",
-                        message = "Você precisa estar autenticado para acessar este recurso. Forneça um token válido."
-                    };
-
-                    var jsonResult = JsonSerializer.Serialize(errorResponse);
-                    return context.Response.WriteAsync(jsonResult);
+                    throw new UnauthorizedException("Acesso negado. Token ausente ou inválido.");
+                },
+                OnForbidden = context =>
+                {
+                    throw new ForbiddenAccessException("Você não tem permissão para acessar este recurso.");
                 }
             };
         });

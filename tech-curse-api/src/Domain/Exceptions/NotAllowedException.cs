@@ -1,10 +1,9 @@
-﻿namespace tech_curse_api.src.Domain.Exceptions
+﻿namespace tech_curse_api.src.Domain.Exceptions;
+
+public class NotAllowedException : Exception
 {
-    public class NotAllowedException : Exception
+    public NotAllowedException(string message) : base(message)
     {
-        public NotAllowedException(string message) : base(message)
-        {
-            
-        }
+        
     }
 }

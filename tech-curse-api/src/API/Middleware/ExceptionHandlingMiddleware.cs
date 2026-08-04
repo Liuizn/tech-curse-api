@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using Microsoft.AspNetCore.Mvc;
+using System.Net;
 using System.Text.Json;
 using tech_curse_api.src.Domain.Exceptions;
 
@@ -7,10 +8,12 @@ namespace tech_curse_api.src.API.Middleware;
 public class ExceptionHandlingMiddleware
 {
     private readonly RequestDelegate _next;
+    private readonly ILogger<ExceptionHandlingMiddleware> _logger;
 
-    public ExceptionHandlingMiddleware(RequestDelegate next)
+    public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
     {
         _next = next;
+        _logger = logger;
     }
 
     public async Task Invoke(HttpContext context)
@@ -21,28 +24,41 @@ public class ExceptionHandlingMiddleware
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Ocorreu uma exceção não tratada.");
             await HandleExceptionAsync(context, ex);
         }
     }
 
-    private static Task HandleExceptionAsync(HttpContext context, Exception exception)
+    private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
-        context.Response.ContentType = "application/json";
-
-        // Mapeia a exceção para o StatusCode correto
-        context.Response.StatusCode = exception switch
+        var statusCode = exception switch
         {
-            NotAllowedException => (int) HttpStatusCode.Forbidden,
-            ConflictException => (int)HttpStatusCode.Conflict,
-            _ => (int)HttpStatusCode.InternalServerError
+            BadRequestExecption => HttpStatusCode.BadRequest,           //400
+            UnauthorizedException => HttpStatusCode.Unauthorized,       //401
+            ForbiddenAccessException => HttpStatusCode.Forbidden,       //403
+            NotFoundException => HttpStatusCode.NotFound,               //404
+            NotAllowedException => HttpStatusCode.Conflict,             //409
+            ConflictException => HttpStatusCode.Conflict,               //409
+            ValidationException => HttpStatusCode.UnprocessableEntity,  //422
+            _ => HttpStatusCode.InternalServerError
         };
 
-        var response = new
+        var problemDetails = new ProblemDetails
         {
-            error = exception.Message,
-            statusCode = context.Response.StatusCode
+            Status = (int)statusCode,
+            Title = statusCode.ToString(),
+            Detail = exception.Message,
+            Instance = context.Request.Path
         };
 
-        return context.Response.WriteAsync(JsonSerializer.Serialize(response));
+        if (exception is ValidationException validationException)
+        {
+            problemDetails.Extensions.Add("errors", validationException.Errors);
+        }
+
+        context.Response.ContentType = "application/problem+json";
+        context.Response.StatusCode = (int)statusCode;
+
+        await context.Response.WriteAsync(JsonSerializer.Serialize(problemDetails));
     }
 }
