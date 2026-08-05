@@ -1,6 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
-using StackExchange.Redis;
 using System.Text.Json.Serialization;
 using tech_curse_api.src.API.Configuration;
 using tech_curse_api.src.API.Middleware;
@@ -28,85 +25,27 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
-var apiConnectionString =
-    builder.Configuration.GetConnectionString("APITechCurse")
-    ?? throw new InvalidOperationException("Connection string 'APITechCurse' not found.");
 
-var cacheConnectionString =
-    builder.Configuration.GetConnectionString("RedisCache")
-    ?? throw new InvalidOperationException("Connection string 'RedisCache' not found.");
-
-// EF Core
-builder.Services.AddDbContext<TechCurseContext>(opt =>
-    opt.UseSqlServer(apiConnectionString));
-
+builder.Services.AddEFCoreSetup(builder.Configuration);
 builder.Services.AddIdentityAuthenticationSetup(builder.Configuration);
-
-// Redis
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    // A string de conexão idealmente vem do appsettings.json
-    options.Configuration = cacheConnectionString;
-    options.InstanceName = "TechCurseAPI_"; 
-});
-
-builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
-    ConnectionMultiplexer.Connect(cacheConnectionString));
+builder.Services.AddRedisCacheSetup(builder.Configuration);
 
 builder.Services.AddAuthorization();
-
 builder.Services.AddEndpointsApiExplorer();
-string securitySchemeName = "Bearer";
-
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Tech Curse API", Version = "v1" });
-
-    // 1. Define o esquema de segurança (Cria o botão "Authorize" no Swagger)
-    c.AddSecurityDefinition(securitySchemeName, new OpenApiSecurityScheme
-    {
-        Description = @"Cabeçalho de autorização JWT usando o esquema Bearer. 
-                      Escreva 'Bearer' [espaço] e em seguida o seu token na caixa de texto abaixo.
-                      Exemplo: 'Bearer 12345abcdef'",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = securitySchemeName
-    });
-
-    // 2. Aplica o requisito de segurança globalmente nos endpoints
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement()
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = securitySchemeName
-                },
-                Scheme = "oauth2",
-                Name = securitySchemeName,
-                In = ParameterLocation.Header,
-            },
-            new List<string>()
-        }
-    });
-});
+builder.Services.AddSwaggerDocumentationSetup(builder.Configuration);
 
 var app = builder.Build();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Homolog"))
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Tech Curse API v1"));
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthentication();
 app.UseAuthorization();
 

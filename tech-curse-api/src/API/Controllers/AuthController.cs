@@ -1,13 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 using tech_curse_api.src.Application.DTOs;
 using tech_curse_api.src.Application.Interfaces;
-using tech_curse_api.src.Domain.Exceptions;
-
 
 namespace tech_curse_api.src.API.Controllers;
 
 [ApiController]
 [Route("tech-curse/[controller]")]
+[Tags("Auth")]
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
@@ -18,6 +18,13 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
+    [SwaggerOperation(
+        Summary = "Registra um novo usuário no sistema.",
+        Description = "**Acesso:** Público."
+    )]
+    [SwaggerResponse(StatusCodes.Status201Created, "Usuário registrado com sucesso.")]
+    [SwaggerResponse(StatusCodes.Status409Conflict, "Conflito. O e-mail informado já está em uso.", typeof(ProblemDetails))]
+    [SwaggerResponse(StatusCodes.Status422UnprocessableEntity, "Erro de validação nos campos enviados.", typeof(ProblemDetails))]
     public async Task<IActionResult> Register([FromBody] RegisterInputDto input)
     {
         var actionResult = await _authService.RegisterAsync(input);
@@ -26,6 +33,13 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
+    [SwaggerOperation(
+        Summary = "Realiza o login de um usuário e retorna o Token JWT.",
+        Description = "**Acesso:** Público."
+    )]
+    [SwaggerResponse(StatusCodes.Status200OK, "Autenticação bem-sucedida. Retorna o Token JWT.", typeof(AuthOutputDto))]
+    [SwaggerResponse(StatusCodes.Status400BadRequest, "Credenciais inválidas.", typeof(ProblemDetails))]
+    [SwaggerResponse(StatusCodes.Status401Unauthorized, "Usuário não autenticado ou inativo.", typeof(ProblemDetails))]
     public async Task<IActionResult> Login([FromBody] LoginInputDto input)
     {
         var authResult = await _authService.LoginAsync(input);
@@ -34,6 +48,12 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("refresh")]
+    [SwaggerOperation(
+        Summary = "Gera um novo Token JWT a partir de um Refresh Token válido.",
+        Description = "**Acesso:** Público."
+    )]
+    [SwaggerResponse(StatusCodes.Status200OK, "Token atualizado com sucesso.", typeof(TokenOutputDto))]
+    [SwaggerResponse(StatusCodes.Status401Unauthorized, "Refresh token expirado ou inválido.", typeof(ProblemDetails))]
     public async Task<IActionResult> Refresh([FromBody] RefreshTokenInputDto input)
     {
         var refreshResult = await _authService.RefreshAsync(input);

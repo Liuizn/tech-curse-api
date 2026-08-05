@@ -35,8 +35,8 @@ public class CourseService : ICourseService
 
         var (courses, totalCount) = await _courseRepository.GetPagedAsync(searchParams);
 
-        var dtos = courses.Select(c => new CourseOutputDto(c.CourseId, c.Titulo, c.Descricao, c.Categoria, c.CargaHoraria, c.DataCriacao, c.Enrollments));
-        
+        var dtos = courses.Select(c => new CourseOutputDto(c.CourseId, c.Titulo, c.Descricao, c.Categoria, c.CargaHoraria, c.DataCriacao));
+
         var result = new PagedResultDto<CourseOutputDto>(
             dtos,
             totalCount,
@@ -52,7 +52,7 @@ public class CourseService : ICourseService
     public async Task<CourseOutputDto?> GetByIdAsync(int id)
     {
         var cacheKey = $"{COURSE_ITEM_PREFIX}{id}";
-        
+
         var cachedCourse = await _cacheService.GetAsync<CourseOutputDto>(cacheKey);
         if (cachedCourse != null)
         {
@@ -63,7 +63,7 @@ public class CourseService : ICourseService
 
         if (course == null) return null;
 
-        var result = new CourseOutputDto(course.CourseId, course.Titulo, course.Descricao, course.Categoria, course.CargaHoraria, course.DataCriacao, course.Enrollments);
+        var result = new CourseOutputDto(course.CourseId, course.Titulo, course.Descricao, course.Categoria, course.CargaHoraria, course.DataCriacao);
 
         await _cacheService.SetAsync(cacheKey, result, TimeSpan.FromMinutes(15));
 
@@ -83,7 +83,7 @@ public class CourseService : ICourseService
 
         await _courseRepository.AddAsync(course);
 
-        var result =  new CourseOutputDto(course.CourseId, course.Titulo, course.Descricao, course.Categoria, course.CargaHoraria, course.DataCriacao, course.Enrollments);
+        var result = new CourseOutputDto(course.CourseId, course.Titulo, course.Descricao, course.Categoria, course.CargaHoraria, course.DataCriacao);
 
         var cacheKey = $"{COURSE_ITEM_PREFIX}{course.CourseId}";
 
@@ -106,7 +106,7 @@ public class CourseService : ICourseService
 
         await _courseRepository.UpdateAsync(course);
 
-        var updatedDto = new CourseOutputDto(course.CourseId, course.Titulo, course.Descricao, course.Categoria, course.CargaHoraria, course.DataCriacao, course.Enrollments);
+        var updatedDto = new CourseOutputDto(course.CourseId, course.Titulo, course.Descricao, course.Categoria, course.CargaHoraria, course.DataCriacao);
         await _cacheService.SetAsync($"{COURSE_ITEM_PREFIX}{dto.Id}", updatedDto, TimeSpan.FromMinutes(15));
 
         await _cacheService.RemoveByPrefixAsync(COURSE_LIST_PREFIX);
