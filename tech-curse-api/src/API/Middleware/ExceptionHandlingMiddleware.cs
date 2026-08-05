@@ -45,10 +45,10 @@ public class ExceptionHandlingMiddleware
 
         var problemDetails = new ProblemDetails
         {
+            Detail = exception.Message,
+            Instance = context.Request.Path,
             Status = (int)statusCode,
             Title = statusCode.ToString(),
-            Detail = exception.Message,
-            Instance = context.Request.Path
         };
 
         if (exception is ValidationException validationException)

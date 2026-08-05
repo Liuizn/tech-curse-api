@@ -16,34 +16,30 @@ public static class IdentityAuthenticationSetup
 {
     public static IServiceCollection AddIdentityAuthenticationSetup(
         this IServiceCollection services,
-        IConfiguration configuration)
+        IConfiguration configuration
+    )
     {
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
 
-        // 1. Configuração do Identity
         services.AddIdentityCore<IdentityUser>(options =>
         {
-            // Senhas
             options.Password.RequireDigit = true;
             options.Password.RequiredLength = 8;
             options.Password.RequireNonAlphanumeric = true;
             options.Password.RequireUppercase = true;
             options.Password.RequireLowercase = true;
 
-            // Bloqueio de conta (Lockout)
             options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
             options.Lockout.MaxFailedAccessAttempts = 5;
             options.Lockout.AllowedForNewUsers = true;
 
-            // Usuário
             options.User.RequireUniqueEmail = true;
         })
         .AddRoles<IdentityRole>()
         .AddEntityFrameworkStores<TechCurseContext>()
         .AddSignInManager();
 
-        // 2. Extração das configurações do JWT
         var jwtIssuer = configuration["Jwt:Issuer"];
         var jwtAudience = configuration["Jwt:Audience"];
         var jwtSigningKey = configuration["Jwt:SigningKey"];
@@ -53,7 +49,6 @@ public static class IdentityAuthenticationSetup
             throw new InvalidOperationException("A chave secreta do JWT (SigningKey) não está configurada ou possui menos de 32 caracteres.");
         }
 
-        // 3. Configuração da Autenticação
         services.AddAuthentication(options =>
         {
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
