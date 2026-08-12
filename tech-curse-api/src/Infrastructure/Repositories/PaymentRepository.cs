@@ -54,11 +54,6 @@ public class PaymentRepository : IPaymentRepository
         return items;
     }
 
-    public async Task<Payment?> GetActiveByEnrollmentAsync(int enrollmentId)
-    {
-        throw new NotImplementedException();
-    }
-
     public async Task<(IEnumerable<Payment> Items, int TotalCount)> GetPagedAsync(PaginationParamsDto searchParams)
     {
         var query = _context.Payments.AsQueryable().AsNoTracking();
@@ -76,16 +71,24 @@ public class PaymentRepository : IPaymentRepository
 
     public async Task AddAsync(Payment payment)
     {
-        throw new NotImplementedException();
+        await _context.Payments.AddAsync(payment);
+        await _context.SaveChangesAsync();
     }
 
     public async Task UpdateAsync(Payment payment)
+    {
+        _context.Payments.Update(payment);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<Payment?> GetActiveByEnrollmentAsync(int enrollmentId)
     {
         throw new NotImplementedException();
     }
 
     public async Task DeleteAsync(Payment payment)
     {
-        throw new NotImplementedException();
+        _context.Payments.Remove(payment);
+        await _context.SaveChangesAsync();
     }
 }

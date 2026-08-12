@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
+using tech_curse_api.src.API.Middleware;
 using tech_curse_api.src.Application.DTOs;
 using tech_curse_api.src.Application.Interfaces;
 
@@ -22,7 +23,7 @@ public class PaymentController : ControllerBase
     [Authorize(Roles = "Admin")]
     [SwaggerOperation(
         Summary = "Lista os pagamentos cadastrados (paginado).",
-        Description = "**Acesso:** Requer role de Admin ou Instructor."
+        Description = "**Acesso:** Requer role de Admin"
     )]
     [SwaggerResponse(StatusCodes.Status200OK, "Retorna a lista paginada.", typeof(PagedResultDto<PaymentOutputDto>))]
     [SwaggerResponse(StatusCodes.Status401Unauthorized, "Usuário não autenticado.", typeof(ProblemDetails))]
@@ -34,10 +35,10 @@ public class PaymentController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     [SwaggerOperation(
         Summary = "Busca os detalhes de um pagamento específico pelo ID.",
-        Description = "**Acesso:** Requer usuário autenticado."
+        Description = "**Acesso:** Requer role de Admin ou o Próprio Student"
     )]  
     [SwaggerResponse(StatusCodes.Status200OK, "Pagamento encontrado.", typeof(PaymentOutputDto))]
     [SwaggerResponse(StatusCodes.Status401Unauthorized, "Usuário não autenticado.", typeof(ProblemDetails))]
@@ -54,7 +55,7 @@ public class PaymentController : ControllerBase
     [Authorize]
     [SwaggerOperation(
         Summary = "Lista todos os pagamentos de um estudante.",
-        Description = "**Acesso:** Requer role de Admin ou o próprio estudante."
+        Description = "**Acesso:** Requer role de Admin ou o Próprio Student"
     )]
     [SwaggerResponse(StatusCodes.Status200OK, "Retorna a lista paginada de pagamentos do estudante.", typeof(PagedResultDto<PaymentOutputDto>))]
     [SwaggerResponse(StatusCodes.Status401Unauthorized, "Usuário não autenticado.", typeof(ProblemDetails))]
@@ -68,10 +69,10 @@ public class PaymentController : ControllerBase
     }
 
     [HttpGet("enrollment/{enrollmentId}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     [SwaggerOperation(
         Summary = "Lista os pagamentos de uma matrícula.",
-        Description = "**Acesso:** Requer role de Admin."
+        Description = "**Acesso:** Requer role de Admin ou o Próprio Student"
     )]
     [SwaggerResponse(StatusCodes.Status200OK, "Retorna a lista de pagamentos da matrícula.", typeof(IEnumerable<PaymentOutputDto>))]
     [SwaggerResponse(StatusCodes.Status401Unauthorized, "Usuário não autenticado.", typeof(ProblemDetails))]
@@ -86,21 +87,25 @@ public class PaymentController : ControllerBase
 
     [HttpPost]
     [Authorize(Roles = "Admin")]
+    [TypeFilter(typeof(IdempotencyFilterMiddleware))]
     [SwaggerOperation(
         Summary = "Cria um novo pagamento no sistema.",
-        Description = "**Acesso:** Requer role de Admin."
+        Description = "**Acesso:** Requer role de Admin"
     )]
     [SwaggerResponse(StatusCodes.Status201Created, "Pagamento criado com sucesso.", typeof(PaymentOutputDto))]
     [SwaggerResponse(StatusCodes.Status401Unauthorized, "Usuário não autenticado.", typeof(ProblemDetails))]
     [SwaggerResponse(StatusCodes.Status403Forbidden, "Acesso negado.", typeof(ProblemDetails))]
     [SwaggerResponse(StatusCodes.Status422UnprocessableEntity, "Erro de validação.", typeof(ProblemDetails))]
-    public async Task<IActionResult> Post([FromBody] PaymentPostDto input)
+    public async Task<IActionResult> Post([FromBody] CreatePaymentDto input)
     {
-        throw new NotImplementedException();
+        var result = await _paymentService.CreatePaymentAsync(input);
+
+        return CreatedAtAction(nameof(Get), new { id = result.PaymentId }, result);
     }
 
-    [HttpPost("{id}/process")]
+    [HttpPost("/process")]
     [Authorize(Roles = "Admin")]
+    [TypeFilter(typeof(IdempotencyFilterMiddleware))]
     [SwaggerOperation(
         Summary = "Processa um pagamento (marca como pago).",
         Description = "**Acesso:** Requer role de Admin"
@@ -110,13 +115,16 @@ public class PaymentController : ControllerBase
     [SwaggerResponse(StatusCodes.Status403Forbidden, "Acesso negado.", typeof(ProblemDetails))]
     [SwaggerResponse(StatusCodes.Status404NotFound, "Pagamento não encontrado.", typeof(ProblemDetails))]
     [SwaggerResponse(StatusCodes.Status422UnprocessableEntity, "Erro ao processar pagamento.", typeof(ProblemDetails))]
-    public async Task<IActionResult> Process(int id, [FromBody] ProcessPaymentDto input)
+    public async Task<IActionResult> Process([FromHeader(Name = "Idempotency-Key")] string idempotencyKey, [FromBody] ProcessPaymentDto input)
     {
-        throw new NotImplementedException();
+        var result = await _paymentService.ProcessPaymentAsync(idempotencyKey, input);
+
+        return Ok(result);
     }
 
-    [HttpPost("{id}/refund")]
+    [HttpPost("/refund")]
     [Authorize(Roles = "Admin")]
+    [TypeFilter(typeof(IdempotencyFilterMiddleware))]
     [SwaggerOperation(
         Summary = "Estorna um pagamento (marca como reembolsado).",
         Description = "**Acesso:** Requer role de Admin"
@@ -126,8 +134,10 @@ public class PaymentController : ControllerBase
     [SwaggerResponse(StatusCodes.Status403Forbidden, "Acesso negado.", typeof(ProblemDetails))]
     [SwaggerResponse(StatusCodes.Status404NotFound, "Pagamento não encontrado.", typeof(ProblemDetails))]
     [SwaggerResponse(StatusCodes.Status422UnprocessableEntity, "Erro ao estornar pagamento.", typeof(ProblemDetails))]
-    public async Task<IActionResult> Refund(int id, [FromBody] RefundPaymentDto input)
+    public async Task<IActionResult> Refund([FromHeader(Name = "Idempotency-Key")] string idempotencyKey, [FromBody] RefundPaymentDto input)
     {
-        throw new NotImplementedException();
+        var result = await _paymentService.RefundPaymentAsync(idempotencyKey, input);
+
+        return Ok(result);
     }
 }

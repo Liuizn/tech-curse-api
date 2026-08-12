@@ -40,6 +40,7 @@ public class ExceptionHandlingMiddleware
             NotAllowedException => HttpStatusCode.Conflict,             //409
             ConflictException => HttpStatusCode.Conflict,               //409
             ValidationException => HttpStatusCode.UnprocessableEntity,  //422
+            GatewayTimeoutException => HttpStatusCode.GatewayTimeout,   //504
             _ => HttpStatusCode.InternalServerError
         };
 

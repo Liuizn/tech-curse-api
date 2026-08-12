@@ -1,5 +1,4 @@
-﻿using System;
-using tech_curse_api.src.Domain.Enums;
+﻿using tech_curse_api.src.Domain.Enums;
 
 namespace tech_curse_api.src.Domain.Entities;
 
@@ -14,16 +13,15 @@ public class Payment
     public int StudentId { get; set; }
     public Student Student { get; set; }
 
-    // Payment data
     public decimal Amount { get; set; }
-    public PaymentStatus Status { get; set; } = PaymentStatus.Pending;
 
-    // Active flag used to enforce the unique active-payment-per-enrollment constraint
+    public PaymentStatus Status { get; set; } = PaymentStatus.Pending;
     public bool IsActive { get; set; } = true;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? PaidAt { get; set; }
+    public DateTime? RefundedAt { get; set; }
 
-    // Optional reference to external provider transaction id
     public string? ExternalTransactionId { get; set; }
+    public string? ReceiptUrl { get; set; }
 }
