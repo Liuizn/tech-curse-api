@@ -9,6 +9,8 @@ namespace tech_curse_api.src.API.Controllers;
 
 [ApiController]
 [Route("tech-curse/[controller]")]
+[Consumes("application/json")]
+[Produces("application/json")]
 [Tags("Payments")]
 public class PaymentController : ControllerBase
 {
