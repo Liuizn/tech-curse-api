@@ -8,7 +8,7 @@ public interface IPaymentRepository
     Task<Payment?> GetByIdAsync(int id);
     Task<(IEnumerable<Payment> Items, int TotalCount)> GetByStudentIdAsync(int studentId, PaginationParamsDto searchParams);
     Task<IEnumerable<Payment>> GetByEnrollmentIdAsync(int enrollmentId);
-    Task<Payment?> GetActiveByEnrollmentAsync(int enrollmentId);
+    Task<bool> ExistsActiveByEnrollmentAsync(int enrollmentId);
     Task<(IEnumerable<Payment> Items, int TotalCount)> GetPagedAsync(PaginationParamsDto searchParams);
     Task AddAsync(Payment payment);
     Task UpdateAsync(Payment payment);

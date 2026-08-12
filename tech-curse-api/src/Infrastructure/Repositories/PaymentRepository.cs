@@ -81,9 +81,9 @@ public class PaymentRepository : IPaymentRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<Payment?> GetActiveByEnrollmentAsync(int enrollmentId)
+    public async Task<bool> ExistsActiveByEnrollmentAsync(int enrollmentId)
     {
-        throw new NotImplementedException();
+        return await _context.Payments.AnyAsync(p => p.EnrollmentId == enrollmentId && p.IsActive);
     }
 
     public async Task DeleteAsync(Payment payment)

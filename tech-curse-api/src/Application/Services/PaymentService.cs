@@ -204,6 +204,20 @@ public class PaymentService : IPaymentService
             throw new NotAllowedException("Não é possível criar um pagamento para uma matrícula inativa.");
         }
 
+        var paymentExists = await _paymentRepository.ExistsActiveByEnrollmentAsync(input.EnrollmentId);
+        if (paymentExists)
+        {
+            throw new NotAllowedException("Já existe um pagamento ativo para esta matrícula.");
+        }
+
+        if (input.Amount <= 0)
+        {
+            throw new ValidationException(new Dictionary<string, string[]>
+            {
+                { nameof(input.Amount), new[] { "O valor do pagamento deve ser maior que zero." } }
+            });
+        }
+
         Payment newPaymeny = new Payment
         {
             EnrollmentId = input.EnrollmentId,
