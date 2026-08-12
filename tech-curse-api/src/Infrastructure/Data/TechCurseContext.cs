@@ -15,6 +15,7 @@ public class TechCurseContext : IdentityDbContext<IdentityUser>
     public DbSet<Course> Courses { get; set; } = null!;
     public DbSet<Student> Students { get; set; } = null!;
     public DbSet<Enrollment> Enrollments { get; set; } = null!;
+    public DbSet<Payment> Payments { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

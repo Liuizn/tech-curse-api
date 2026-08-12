@@ -7,6 +7,8 @@ namespace tech_curse_api.src.API.Controllers;
 
 [ApiController]
 [Route("tech-curse/[controller]")]
+[Consumes("application/json")]
+[Produces("application/json")]
 [Tags("Auth")]
 public class AuthController : ControllerBase
 {

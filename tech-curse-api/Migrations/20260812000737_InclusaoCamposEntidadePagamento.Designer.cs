@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using tech_curse_api.src.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using tech_curse_api.src.Infrastructure.Data;
 namespace tech_curse_api.Migrations
 {
     [DbContext(typeof(TechCurseContext))]
-    partial class TechCurseContextModelSnapshot : ModelSnapshot
+    [Migration("20260812000737_InclusaoCamposEntidadePagamento")]
+    partial class InclusaoCamposEntidadePagamento
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

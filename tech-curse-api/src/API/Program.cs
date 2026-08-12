@@ -1,30 +1,50 @@
 using System.Text.Json.Serialization;
 using tech_curse_api.src.API.Configuration;
 using tech_curse_api.src.API.Middleware;
+using tech_curse_api.src.Application.Factory;
 using tech_curse_api.src.Application.Interfaces;
 using tech_curse_api.src.Application.Services;
+using tech_curse_api.src.Application.Strategies;
 using tech_curse_api.src.Infrastructure.Data;
+using tech_curse_api.src.Infrastructure.ExternalServices;
 using tech_curse_api.src.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+builder.Services.AddScoped<ICourseRepository, CourseRepository>();
+builder.Services.AddScoped<IStudentRepository, StudentRepository>();
+builder.Services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+
+builder.Services.AddScoped<ICourseService, CourseService>();
+builder.Services.AddScoped<IStudentService, StudentService>();
+builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<ICacheService, RedisCacheService>();
-builder.Services.AddScoped<ICourseService, CourseService>();
-builder.Services.AddScoped<ICourseRepository, CourseRepository>();
-builder.Services.AddScoped<IStudentService, StudentService>();
-builder.Services.AddScoped<IStudentRepository, StudentRepository>();
-builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
-builder.Services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
+
+if (builder.Environment.IsProduction())
+{
+    
+}
+else
+{
+    builder.Services.AddScoped<IPaymentGatewayAdapter, SimulatedPaymentGatewayAdapter>();
+}
+
+builder.Services.AddScoped<IPaymentStrategy, CreditCardPaymentStrategy>();
+
+builder.Services.AddScoped<PaymentStrategyFactory>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
-
 
 builder.Services.AddEFCoreSetup(builder.Configuration);
 builder.Services.AddIdentityAuthenticationSetup(builder.Configuration);

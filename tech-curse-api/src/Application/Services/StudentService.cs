@@ -80,7 +80,6 @@ public class StudentService : IStudentService
         }
 
         var student = await _studentRepository.GetByIdAsync(id);
-
         if (student == null) return null;
 
         await ValidateRoleAcess(student.IdentityUserId);
