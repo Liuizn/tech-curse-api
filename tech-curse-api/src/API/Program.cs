@@ -46,6 +46,7 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
+builder.Services.AddSerilogSetup(builder.Configuration);
 builder.Services.AddEFCoreSetup(builder.Configuration);
 builder.Services.AddIdentityAuthenticationSetup(builder.Configuration);
 builder.Services.AddRedisCacheSetup(builder.Configuration);
@@ -57,6 +58,7 @@ builder.Services.AddSwaggerDocumentationSetup(builder.Configuration);
 var app = builder.Build();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseMiddleware<CorrelationIdMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Homolog"))

@@ -20,6 +20,8 @@ public class PaymentService : IPaymentService
     private readonly ICacheService _cacheService;
     private readonly ICurrentUserService _currentUserService;
 
+    private readonly ILogger<PaymentService> _logger;
+
     private const string PAYMENT_LIST_PREFIX = "payments:list:";
     private const string PAYMENT_ITEM_PREFIX = "payments:item:";
     private const string PAYMENT_BY_STUDENT_PREFIX = "payments:student:";
@@ -32,7 +34,8 @@ public class PaymentService : IPaymentService
         IPaymentGatewayAdapter paymentGateway,
         PaymentStrategyFactory strategyFactory,
         ICacheService cacheService,
-        ICurrentUserService currentUserService
+        ICurrentUserService currentUserService,
+        ILogger<PaymentService> logger
     ) {
         _studentRepository = studentRepository;
         _enrollmentRepository = enrollmentRepository;
@@ -43,6 +46,7 @@ public class PaymentService : IPaymentService
 
         _cacheService = cacheService;
         _currentUserService = currentUserService;
+        _logger = logger;
     }
 
     public async Task<PagedResultDto<PaymentOutputDto>> GetPagedAsync(PaginationParamsDto searchParams)
@@ -194,6 +198,7 @@ public class PaymentService : IPaymentService
 
         if (enrollment == null)
         {
+            _logger.LogWarning("Tentativa de criar pagamento para matrícula inexistente: {EnrollmentId}", input.EnrollmentId);
             throw new NotFoundException("Matrícula não encontrada.");
         }
 
@@ -201,6 +206,7 @@ public class PaymentService : IPaymentService
 
         if (!isEnrollmentActive)
         {
+            _logger.LogWarning("Falha ao criar intenção. Matrícula inativa: {EnrollmentId}", input.EnrollmentId);
             throw new NotAllowedException("Não é possível criar um pagamento para uma matrícula inativa.");
         }
 
@@ -231,6 +237,9 @@ public class PaymentService : IPaymentService
         await _paymentRepository.AddAsync(newPaymeny);
 
         await ClearPaymentCachesAsync();
+
+        _logger.LogInformation("Intenção de pagamento criada com sucesso. PaymentId: {PaymentId}, EnrollmentId: {EnrollmentId}",
+            newPaymeny.PaymentId, newPaymeny.EnrollmentId);
 
         return new PaymentOutputDto(
             newPaymeny.PaymentId,
@@ -267,6 +276,8 @@ public class PaymentService : IPaymentService
 
             if (!gatewayResult.IsSuccess)
             {
+                _logger.LogWarning("Falha no gateway ao processar PaymentId {PaymentId}. Erro: {ErrorCode} - {ErrorMessage}",
+                    payment.PaymentId, gatewayResult.ErrorCode, gatewayResult.ErrorMessage);
                 throw new BadRequestExecption($"Falha ao processar pagamento [{gatewayResult.ErrorCode}]: {gatewayResult.ErrorMessage}");
             }
 
@@ -279,10 +290,14 @@ public class PaymentService : IPaymentService
 
             await ClearPaymentCachesAsync();
 
+            _logger.LogInformation("Pagamento {PaymentId} processado com sucesso. TransactionId: {TransactionId}",
+                payment.PaymentId, payment.ExternalTransactionId);
+
             return new ProcessPaymentOutputDto(true, "Pagamento processado com sucesso.", payment.ExternalTransactionId);
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException ex)
         {
+            _logger.LogError(ex, "Timeout na comunicação com o gateway para o PaymentId {PaymentId}", dto.PaymentId);
             throw new GatewayTimeoutException("A comunicação com o provedor de pagamento excedeu o tempo limite.");
         }
     }
@@ -309,6 +324,8 @@ public class PaymentService : IPaymentService
 
             if (!gatewayResult.IsSuccess)
             {
+                _logger.LogWarning("Falha no gateway ao estornar PaymentId {PaymentId}. Erro: {ErrorCode} - {ErrorMessage}",
+                    payment.PaymentId, gatewayResult.ErrorCode, gatewayResult.ErrorMessage);
                 throw new BadRequestExecption($"Falha ao estornar pagamento [{gatewayResult.ErrorCode}]: {gatewayResult.ErrorMessage}");
             }
 
@@ -320,10 +337,14 @@ public class PaymentService : IPaymentService
 
             await ClearPaymentCachesAsync();
 
+            _logger.LogInformation("Estorno realizado com sucesso para o PaymentId {PaymentId}. TransactionId: {TransactionId}",
+                payment.PaymentId, payment.ExternalTransactionId);
+
             return new RefundPaymentOutputDto(true, "Estorno realizado com sucesso.");
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException ex)
         {
+            _logger.LogError(ex, "Timeout na comunicação com o gateway durante o estorno do PaymentId {PaymentId}", dto.PaymentId);
             throw new GatewayTimeoutException("A comunicação com o provedor de pagamento excedeu o tempo limite durante o estorno.");
         }
     }
