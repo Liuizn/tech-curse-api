@@ -11,8 +11,18 @@ public static class EFCoreSetup
             configuration.GetConnectionString("APITechCurse")
             ?? throw new InvalidOperationException("Connection string 'APITechCurse' not found.");
 
-        services.AddDbContext<TechCurseContext>(opt =>
-            opt.UseSqlServer(apiConnectionString));
+        services.AddDbContext<TechCurseContext>(options =>
+        {
+            options.UseSqlServer(
+                apiConnectionString,
+                sqlOptions =>
+                {
+                    sqlOptions.EnableRetryOnFailure(
+                    maxRetryCount: 5, // Tenta até 5 vezes
+                    maxRetryDelay: TimeSpan.FromSeconds(10), // Espera até 10 segundos entre as tentativas
+                    errorNumbersToAdd: null);
+                });
+        });
 
         return services;
     }

@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 using tech_curse_api.src.API.Configuration;
 using tech_curse_api.src.API.Middleware;
@@ -77,16 +78,19 @@ app.MapControllers();
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
+
+    var dbContext = services.GetRequiredService<TechCurseContext>();
+
     try
     {
-        // Executa o seed de forma assíncrona
+        dbContext.Database.Migrate();
+        
         await DbInitializer.SeedDataAsync(services);
     }
     catch (Exception ex)
     {
-        // Registre o erro no log caso algo dê errado na inicialização
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Ocorreu um erro ao rodar o Seed do banco de dados.");
+        logger.LogError(ex, "Ocorreu um erro ao rodar as Migrations ou o Seed do banco de dados.");
     }
 }
 

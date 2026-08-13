@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "1433:1433"
+
+  redis:
+    image: redis:alpine
+    # O Redis Alpine padrão não vem com senha ativada por default, 
+    # mas a porta será exposta normalmente.
+    ports:
+      - "6380:6379" # Mapeando a porta 6380 que você usa localmente
+
+  seq:
+    image: datalust/seq:latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SEQ_FIRSTRUN_ADMINPASSWORD=Admin123!
+      - SEQ_PASSWORD=${SEQ_PASSWORD}
+    ports:
+      - "9000:80"     
+      - "5341:5341"   
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      
+      # 1. Suas configurações de JWT (Lendo do .env)
+      - Jwt__SigningKey=${JWT_SIGNING_KEY}
+      - Jwt__Issuer=${JWT_ISSUER}
+      - Jwt__Audience=${JWT_AUDIENCE}
+      
+      # 2. Suas Connection Strings (Apontando para os containers!)
+      # Trocamos o (localdb) pelo nome do serviço 'db' e adicionamos o usuário 'sa'
+      - ConnectionStrings__APITechCurse=Server=db;Database=APITechCurse;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True;
+      
+      # Trocamos o localhost pelo nome do serviço 'redis'
+      - ConnectionStrings__RedisCache=redis:6379,password=${REDIS_PASSWORD},abortConnect=false,connectTimeout=5000
+      
+      # Trocamos o localhost pelo nome do serviço 'seq'
+      - ConnectionStrings__SeqUrl=http://seq:5341
+      
+    depends_on:
+      - db
+      - redis
+      - seq
