@@ -1,5 +1,6 @@
 # Tech Curse API
 [![CI/CD Pipeline](https://github.com/Liuizn/tech-curse-api/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Liuizn/tech-curse-api/actions/workflows/ci-cd.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Objetivo do Projeto
 API REST funcional desenvolvida para gerenciar cursos, estudantes, matrículas e transações financeiras em uma plataforma de cursos online. 
