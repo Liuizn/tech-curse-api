@@ -14,7 +14,7 @@ services:
     # O Redis Alpine padrão não vem com senha ativada por default, 
     # mas a porta será exposta normalmente.
     ports:
-      - "6380:6379" # Mapeando a porta 6380 que você usa localmente
+      - "6380:6379" 
 
   seq:
     image: datalust/seq:latest
@@ -35,19 +35,14 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       
-      # 1. Suas configurações de JWT (Lendo do .env)
       - Jwt__SigningKey=${JWT_SIGNING_KEY}
       - Jwt__Issuer=${JWT_ISSUER}
       - Jwt__Audience=${JWT_AUDIENCE}
       
-      # 2. Suas Connection Strings (Apontando para os containers!)
-      # Trocamos o (localdb) pelo nome do serviço 'db' e adicionamos o usuário 'sa'
       - ConnectionStrings__APITechCurse=Server=db;Database=APITechCurse;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True;
       
-      # Trocamos o localhost pelo nome do serviço 'redis'
       - ConnectionStrings__RedisCache=redis:6379,password=${REDIS_PASSWORD},abortConnect=false,connectTimeout=5000
       
-      # Trocamos o localhost pelo nome do serviço 'seq'
       - ConnectionStrings__SeqUrl=http://seq:5341
       
     depends_on:
