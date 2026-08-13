@@ -19,6 +19,8 @@ public static class CacheRedisSetup
         services.AddSingleton<IConnectionMultiplexer>(sp =>
             ConnectionMultiplexer.Connect(cacheConnectionString));
 
+        services.AddHealthChecks().AddRedis(cacheConnectionString, name: "Cache_Redis");
+
         return services;
     }
 }

@@ -73,6 +73,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 // Seção de Seed de Dados
 using (var scope = app.Services.CreateScope())

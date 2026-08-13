@@ -83,7 +83,7 @@ jobs:
           echo "SEQ_PASSWORD=${{ secrets.SEQ_PASSWORD }}" >> .env
           
           echo "Iniciando a orquestração do docker-compose para o Smoke Test..."
-          docker-compose up -d
+          docker compose up -d
           
           echo "Aguardando 20 segundos para a API, DB, Redis e Seq inicializarem as portas..."
           sleep 20

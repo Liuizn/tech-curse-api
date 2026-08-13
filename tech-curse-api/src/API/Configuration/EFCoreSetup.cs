@@ -24,6 +24,8 @@ public static class EFCoreSetup
                 });
         });
 
+        services.AddHealthChecks().AddSqlServer(apiConnectionString, name: "Database_SQLServer");
+
         return services;
     }
 }
