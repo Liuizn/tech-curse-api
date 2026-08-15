@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using tech_curse_api.src.Application.DTOs;
 using tech_curse_api.src.Application.Interfaces;
+using MediatR;
+using tech_curse_api.src.Application.Features.Students.Commands.CreateStudent;
 
 namespace tech_curse_api.src.API.Controllers;
 
@@ -14,10 +16,12 @@ namespace tech_curse_api.src.API.Controllers;
 public class StudentController : ControllerBase
 {
     private readonly IStudentService _studentService;
+    private readonly IMediator _mediator;
 
-    public StudentController(IStudentService studentService)
+    public StudentController(IStudentService studentService, IMediator mediator)
     {
         _studentService = studentService;
+        _mediator = mediator;
     }
 
     [HttpPost]
@@ -33,8 +37,8 @@ public class StudentController : ControllerBase
     [SwaggerResponse(StatusCodes.Status422UnprocessableEntity, "Erro de validação.", typeof(ProblemDetails))]
     public async Task<IActionResult> Post([FromBody] StudentPostDto input)
     {
-        var result = await _studentService.CreateAsync(input);
-
+        var command = new CreateStudentCommand(input.Nome, input.Email);
+        var result = await _mediator.Send(command);
         return CreatedAtAction(nameof(Get), new { id = result.Id }, result);
     }
 
