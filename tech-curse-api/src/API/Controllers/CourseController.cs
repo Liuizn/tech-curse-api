@@ -7,6 +7,7 @@ using MediatR;
 using tech_curse_api.src.Application.Features.Courses.Commands.CreateCourse;
 using tech_curse_api.src.Application.Features.Courses.Queries.GetCourses;
 using tech_curse_api.src.Application.Features.Courses.Queries.GetCourseById;
+using tech_curse_api.src.Application.Features.Courses.Commands.UpdateCourse;
 
 namespace tech_curse_api.src.API.Controllers;
 
@@ -84,11 +85,9 @@ public class CourseController : ControllerBase
     [SwaggerResponse(StatusCodes.Status404NotFound, "Curso não encontrado.", typeof(ProblemDetails))]
     public async Task<IActionResult> Put(int id, [FromBody] CoursePostDto input)
     {
-        CoursePutDto dto = new CoursePutDto(id, input.Titulo, input.Descricao, input.Categoria, input.CargaHoraria);
-
-        var result = await _courseService.UpdateAsync(dto);
-
-        return result ? NoContent() : NotFound();
+        var command = new UpdateCourseCommand(id, input.Titulo, input.Descricao, input.Categoria, input.CargaHoraria);
+        await _mediator.Send(command);
+        return NoContent();
     }
 
     [HttpDelete("{id}")]
