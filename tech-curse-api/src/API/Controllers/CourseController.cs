@@ -5,6 +5,7 @@ using tech_curse_api.src.Application.DTOs;
 using tech_curse_api.src.Application.Interfaces;
 using MediatR;
 using tech_curse_api.src.Application.Features.Courses.Commands.CreateCourse;
+using tech_curse_api.src.Application.Features.Courses.Queries.GetCourses;
 
 namespace tech_curse_api.src.API.Controllers;
 
@@ -51,7 +52,7 @@ public class CourseController : ControllerBase
     [SwaggerResponse(StatusCodes.Status401Unauthorized, "Usuário não autenticado.", typeof(ProblemDetails))]
     public async Task<IActionResult> GetAll([FromQuery] CoursePaginationParamsDto searchParams)
     {
-        var result = await _courseService.GetPagedAsync(searchParams);
+        var result = await _mediator.Send(new GetCoursesQuery(searchParams));
         return Ok(result);
     }
 
