@@ -3,7 +3,14 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using tech_curse_api.src.API.Middleware;
 using tech_curse_api.src.Application.DTOs;
-using tech_curse_api.src.Application.Interfaces;
+using tech_curse_api.src.Application.Features.Payments.Queries.GetPayments;
+using tech_curse_api.src.Application.Features.Payments.Queries.GetPaymentById;
+using tech_curse_api.src.Application.Features.Payments.Queries.GetPaymentsByStudentId;
+using tech_curse_api.src.Application.Features.Payments.Queries.GetPaymentsByEnrollmentId;
+using tech_curse_api.src.Application.Features.Payments.Commands.CreatePayment;
+using tech_curse_api.src.Application.Features.Payments.Commands.ProcessPayment;
+using tech_curse_api.src.Application.Features.Payments.Commands.RefundPayment;
+using MediatR;
 
 namespace tech_curse_api.src.API.Controllers;
 
@@ -14,11 +21,11 @@ namespace tech_curse_api.src.API.Controllers;
 [Tags("Payments")]
 public class PaymentController : ControllerBase
 {
-    private readonly IPaymentService _paymentService;
+    private readonly IMediator _mediator;
 
-    public PaymentController(IPaymentService paymentService)
+    public PaymentController(IMediator mediator)
     {
-        _paymentService = paymentService;
+        _mediator = mediator;
     }
 
     [HttpGet]
@@ -32,7 +39,7 @@ public class PaymentController : ControllerBase
     [SwaggerResponse(StatusCodes.Status403Forbidden, "Acesso negado.", typeof(ProblemDetails))]
     public async Task<IActionResult> GetAll([FromQuery] PaginationParamsDto searchParams)
     {
-        var result = await _paymentService.GetPagedAsync(searchParams);
+        var result = await _mediator.Send(new GetPaymentsQuery(searchParams));
         return Ok(result);
     }
 
@@ -47,9 +54,7 @@ public class PaymentController : ControllerBase
     [SwaggerResponse(StatusCodes.Status404NotFound, "Pagamento não encontrado.", typeof(ProblemDetails))]
     public async Task<IActionResult> Get(int id)
     {
-        var result = await _paymentService.GetByIdAsync(id);
-        if (result == null) return NotFound();
-
+        var result = await _mediator.Send(new GetPaymentByIdQuery(id));
         return Ok(result);
     }
 
@@ -65,8 +70,7 @@ public class PaymentController : ControllerBase
     [SwaggerResponse(StatusCodes.Status404NotFound, "Estudante não encontrado.", typeof(ProblemDetails))]
     public async Task<IActionResult> GetByStudent(int studentId, [FromQuery] PaginationParamsDto searchParams)
     {
-        var result = await _paymentService.GetByStudentIdAsync(studentId, searchParams);
-
+        var result = await _mediator.Send(new GetPaymentsByStudentIdQuery(studentId, searchParams));
         return Ok(result);
     }
 
@@ -82,8 +86,7 @@ public class PaymentController : ControllerBase
     [SwaggerResponse(StatusCodes.Status404NotFound, "Matrícula não encontrada.", typeof(ProblemDetails))]
     public async Task<IActionResult> GetByEnrollment(int enrollmentId)
     {
-        var result = await _paymentService.GetByEnrollmentIdAsync(enrollmentId);
-
+        var result = await _mediator.Send(new GetPaymentsByEnrollmentIdQuery(enrollmentId));
         return Ok(result);
     }
 
@@ -100,46 +103,43 @@ public class PaymentController : ControllerBase
     [SwaggerResponse(StatusCodes.Status422UnprocessableEntity, "Erro de validação.", typeof(ProblemDetails))]
     public async Task<IActionResult> Post([FromBody] CreatePaymentDto input)
     {
-        var result = await _paymentService.CreatePaymentAsync(input);
-
+        var result = await _mediator.Send(new CreatePaymentCommand(input.EnrollmentId, input.Amount));
         return CreatedAtAction(nameof(Get), new { id = result.PaymentId }, result);
     }
 
-    [HttpPost("/process")]
+    [HttpPost("process")]
     [Authorize(Roles = "Admin")]
     [TypeFilter(typeof(IdempotencyFilterMiddleware))]
     [SwaggerOperation(
         Summary = "Processa um pagamento (marca como pago).",
         Description = "**Acesso:** Requer role de Admin"
     )]
-    [SwaggerResponse(StatusCodes.Status200OK, "Pagamento processado com sucesso.", typeof(PaymentOutputDto))]
+    [SwaggerResponse(StatusCodes.Status200OK, "Pagamento processado com sucesso.", typeof(ProcessPaymentOutputDto))]
     [SwaggerResponse(StatusCodes.Status401Unauthorized, "Usuário não autenticado.", typeof(ProblemDetails))]
     [SwaggerResponse(StatusCodes.Status403Forbidden, "Acesso negado.", typeof(ProblemDetails))]
     [SwaggerResponse(StatusCodes.Status404NotFound, "Pagamento não encontrado.", typeof(ProblemDetails))]
     [SwaggerResponse(StatusCodes.Status422UnprocessableEntity, "Erro ao processar pagamento.", typeof(ProblemDetails))]
     public async Task<IActionResult> Process([FromHeader(Name = "Idempotency-Key")] string idempotencyKey, [FromBody] ProcessPaymentDto input)
     {
-        var result = await _paymentService.ProcessPaymentAsync(idempotencyKey, input);
-
+        var result = await _mediator.Send(new ProcessPaymentCommand(input.PaymentId, input.type, idempotencyKey));
         return Ok(result);
     }
 
-    [HttpPost("/refund")]
+    [HttpPost("refund")]
     [Authorize(Roles = "Admin")]
     [TypeFilter(typeof(IdempotencyFilterMiddleware))]
     [SwaggerOperation(
         Summary = "Estorna um pagamento (marca como reembolsado).",
         Description = "**Acesso:** Requer role de Admin"
     )]
-    [SwaggerResponse(StatusCodes.Status200OK, "Pagamento estornado com sucesso.", typeof(PaymentOutputDto))]
+    [SwaggerResponse(StatusCodes.Status200OK, "Pagamento estornado com sucesso.", typeof(RefundPaymentOutputDto))]
     [SwaggerResponse(StatusCodes.Status401Unauthorized, "Usuário não autenticado.", typeof(ProblemDetails))]
     [SwaggerResponse(StatusCodes.Status403Forbidden, "Acesso negado.", typeof(ProblemDetails))]
     [SwaggerResponse(StatusCodes.Status404NotFound, "Pagamento não encontrado.", typeof(ProblemDetails))]
     [SwaggerResponse(StatusCodes.Status422UnprocessableEntity, "Erro ao estornar pagamento.", typeof(ProblemDetails))]
     public async Task<IActionResult> Refund([FromHeader(Name = "Idempotency-Key")] string idempotencyKey, [FromBody] RefundPaymentDto input)
     {
-        var result = await _paymentService.RefundPaymentAsync(idempotencyKey, input);
-
+        var result = await _mediator.Send(new RefundPaymentCommand(input.PaymentId, idempotencyKey));
         return Ok(result);
     }
 }

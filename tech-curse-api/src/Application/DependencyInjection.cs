@@ -12,8 +12,6 @@ namespace tech_curse_api.src.Application
     {
         public static IServiceCollection AddApplication(this IServiceCollection services)
         {
-            services.AddScoped<IPaymentService, PaymentService>();
-
             services.AddScoped<IPaymentStrategy, CreditCardPaymentStrategy>();
             services.AddScoped<PaymentStrategyFactory>();
 
