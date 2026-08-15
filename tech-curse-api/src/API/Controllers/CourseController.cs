@@ -6,6 +6,7 @@ using tech_curse_api.src.Application.Interfaces;
 using MediatR;
 using tech_curse_api.src.Application.Features.Courses.Commands.CreateCourse;
 using tech_curse_api.src.Application.Features.Courses.Queries.GetCourses;
+using tech_curse_api.src.Application.Features.Courses.Queries.GetCourseById;
 
 namespace tech_curse_api.src.API.Controllers;
 
@@ -67,9 +68,8 @@ public class CourseController : ControllerBase
     [SwaggerResponse(StatusCodes.Status404NotFound, "Curso não encontrado.", typeof(ProblemDetails))]
     public async Task<IActionResult> Get(int id)
     {
-        var result = await _courseService.GetByIdAsync(id);
-
-        return result is not null ? Ok(result) : NotFound();
+        var result = await _mediator.Send(new GetCourseByIdQuery(id));
+        return Ok(result);
     }
 
     [HttpPut("{id}")]
