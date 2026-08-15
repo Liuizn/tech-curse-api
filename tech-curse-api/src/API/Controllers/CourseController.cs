@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using tech_curse_api.src.Application.DTOs;
 using tech_curse_api.src.Application.Interfaces;
+using MediatR;
+using tech_curse_api.src.Application.Features.Courses.Commands.CreateCourse;
 
 namespace tech_curse_api.src.API.Controllers;
 
@@ -14,10 +16,12 @@ namespace tech_curse_api.src.API.Controllers;
 public class CourseController : ControllerBase
 {
     private readonly ICourseService _courseService;
+    private readonly IMediator _mediator;
 
-    public CourseController(ICourseService courseService)
+    public CourseController(ICourseService courseService, IMediator mediator)
     {
         _courseService = courseService;
+        _mediator = mediator;
     }
 
     [HttpPost]
@@ -30,9 +34,9 @@ public class CourseController : ControllerBase
     [SwaggerResponse(StatusCodes.Status401Unauthorized, "Usuário não autenticado.", typeof(ProblemDetails))]
     [SwaggerResponse(StatusCodes.Status403Forbidden, "Acesso negado.", typeof(ProblemDetails))]
     [SwaggerResponse(StatusCodes.Status422UnprocessableEntity, "Erro de validação.", typeof(ProblemDetails))]
-    public async Task<IActionResult> Post([FromBody] CoursePostDto input)
+    public async Task<IActionResult> Post([FromBody] CreateCourseCommand command)
     {
-        var result = await _courseService.CreateAsync(input);
+        var result = await _mediator.Send(command);
 
         return CreatedAtAction(nameof(Get), new { id = result.Id }, result);
     }
