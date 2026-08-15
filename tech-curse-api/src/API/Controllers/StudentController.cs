@@ -7,6 +7,7 @@ using MediatR;
 using tech_curse_api.src.Application.Features.Students.Commands.CreateStudent;
 using tech_curse_api.src.Application.Features.Students.Queries.GetStudents;
 using tech_curse_api.src.Application.Features.Students.Queries.GetStudentById;
+using tech_curse_api.src.Application.Features.Students.Queries.GetStudentEnrollments;
 
 namespace tech_curse_api.src.API.Controllers;
 
@@ -87,9 +88,9 @@ public class StudentController : ControllerBase
     [SwaggerResponse(StatusCodes.Status404NotFound, "Estudante não encontrado.", typeof(ProblemDetails))]
     public async Task<IActionResult> GetEnrollments(int id)
     {
-        var result = await _studentService.GetCoursesAsync(id);
-
-        return result is not null ? Ok(result) : NotFound();
+        var query = new GetStudentEnrollmentsQuery(id);
+        var result = await _mediator.Send(query);
+        return Ok(result);
     }
 
     [HttpGet("me")]
