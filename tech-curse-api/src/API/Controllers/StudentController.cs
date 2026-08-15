@@ -10,6 +10,7 @@ using tech_curse_api.src.Application.Features.Students.Queries.GetStudentById;
 using tech_curse_api.src.Application.Features.Students.Queries.GetStudentEnrollments;
 using tech_curse_api.src.Application.Features.Students.Queries.GetSelfStudent;
 using tech_curse_api.src.Application.Features.Students.Commands.UpdateStudent;
+using tech_curse_api.src.Application.Features.Students.Commands.DeleteStudent;
 
 namespace tech_curse_api.src.API.Controllers;
 
@@ -140,8 +141,8 @@ public class StudentController : ControllerBase
     [SwaggerResponse(StatusCodes.Status404NotFound, "Estudante não encontrado.", typeof(ProblemDetails))]
     public async Task<IActionResult> Delete(int id)
     {
-        var result = await _studentService.DeleteAsync(id);
-
-        return result ? NoContent() : NotFound();
+        var command = new DeleteStudentCommand(id);
+        await _mediator.Send(command);
+        return NoContent();
     }
 }
