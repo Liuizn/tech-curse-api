@@ -9,6 +9,7 @@ using tech_curse_api.src.Application.Features.Students.Queries.GetStudents;
 using tech_curse_api.src.Application.Features.Students.Queries.GetStudentById;
 using tech_curse_api.src.Application.Features.Students.Queries.GetStudentEnrollments;
 using tech_curse_api.src.Application.Features.Students.Queries.GetSelfStudent;
+using tech_curse_api.src.Application.Features.Students.Commands.UpdateStudent;
 
 namespace tech_curse_api.src.API.Controllers;
 
@@ -122,11 +123,9 @@ public class StudentController : ControllerBase
     [SwaggerResponse(StatusCodes.Status422UnprocessableEntity, "Erro de validação.", typeof(ProblemDetails))]
     public async Task<IActionResult> Put(int id, [FromBody] StudentPutDto input)
     {
-        StudentPutDto dto = new StudentPutDto(input.Nome);
-
-        var result = await _studentService.UpdateAsync(id, dto);
-
-        return result ? NoContent() : NotFound();
+        var command = new UpdateStudentCommand(id, input.Nome);
+        await _mediator.Send(command);
+        return NoContent();
     }
 
     [HttpDelete("{id}")]
