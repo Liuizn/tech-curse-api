@@ -5,6 +5,7 @@ using tech_curse_api.src.Application.DTOs;
 using tech_curse_api.src.Application.Interfaces;
 using MediatR;
 using tech_curse_api.src.Application.Features.Students.Commands.CreateStudent;
+using tech_curse_api.src.Application.Features.Students.Queries.GetStudents;
 
 namespace tech_curse_api.src.API.Controllers;
 
@@ -53,7 +54,8 @@ public class StudentController : ControllerBase
     [SwaggerResponse(StatusCodes.Status403Forbidden, "Acesso negado.", typeof(ProblemDetails))]
     public async Task<IActionResult> GetAll([FromQuery]PaginationParamsDto searchParams)
     {
-        var result = await _studentService.GetPagedAsync(searchParams);
+        var query = new GetStudentsQuery(searchParams);
+        var result = await _mediator.Send(query);
         return Ok(result);
     }
 
