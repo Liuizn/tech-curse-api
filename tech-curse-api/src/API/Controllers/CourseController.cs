@@ -8,6 +8,7 @@ using tech_curse_api.src.Application.Features.Courses.Commands.CreateCourse;
 using tech_curse_api.src.Application.Features.Courses.Queries.GetCourses;
 using tech_curse_api.src.Application.Features.Courses.Queries.GetCourseById;
 using tech_curse_api.src.Application.Features.Courses.Commands.UpdateCourse;
+using tech_curse_api.src.Application.Features.Courses.Commands.DeleteCourse;
 
 namespace tech_curse_api.src.API.Controllers;
 
@@ -18,12 +19,10 @@ namespace tech_curse_api.src.API.Controllers;
 [Tags("Courses")]
 public class CourseController : ControllerBase
 {
-    private readonly ICourseService _courseService;
     private readonly IMediator _mediator;
 
-    public CourseController(ICourseService courseService, IMediator mediator)
+    public CourseController(IMediator mediator)
     {
-        _courseService = courseService;
         _mediator = mediator;
     }
 
@@ -103,8 +102,8 @@ public class CourseController : ControllerBase
     [SwaggerResponse(StatusCodes.Status409Conflict, "Conflito. O curso possui matrículas ativas.", typeof(ProblemDetails))]
     public async Task<IActionResult> Delete(int id)
     {
-        var result = await _courseService.DeleteAsync(id);
-
-        return result ? NoContent() : NotFound();
+        var command = new DeleteCourseCommand(id);
+        await _mediator.Send(command);
+        return NoContent();
     }
 }
