@@ -1,4 +1,4 @@
-﻿using tech_curse_api.src.Application.DTOs;
+using tech_curse_api.src.Application.DTOs;
 using tech_curse_api.src.Domain.Entities; 
 
 namespace tech_curse_api.src.Application.Interfaces;
@@ -11,4 +11,5 @@ public interface ICourseRepository
     Task AddAsync(Course course);
     Task UpdateAsync(Course course);
     Task DeleteAsync(Course course);
+    Task<bool> HasEnrollmentsAsync(int courseId);
 }
