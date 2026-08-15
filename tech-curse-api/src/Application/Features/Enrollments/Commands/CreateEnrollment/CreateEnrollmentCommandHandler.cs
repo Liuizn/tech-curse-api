@@ -1,21 +1,23 @@
-﻿
-using tech_curse_api.src.Application.DTOs;
+using MediatR;
 using tech_curse_api.src.Application.Interfaces;
 using tech_curse_api.src.Domain.Entities;
 using tech_curse_api.src.Domain.Enums;
 using tech_curse_api.src.Domain.Exceptions;
 
+namespace tech_curse_api.src.Application.Features.Enrollments.Commands.CreateEnrollment;
 
-namespace tech_curse_api.src.Application.Services;
-
-public class EnrollmentService : IEnrollmentService
+public class CreateEnrollmentCommandHandler : IRequestHandler<CreateEnrollmentCommand>
 {
     private readonly ICurrentUserService _currentUserService;
     private readonly ICourseRepository _courseRepository;
     private readonly IStudentRepository _studentRepository;
     private readonly IEnrollmentRepository _enrollmentRepository;
 
-    public EnrollmentService(ICurrentUserService currentUserService, ICourseRepository courseRepository, IStudentRepository studentRepository, IEnrollmentRepository enrollmentRepository)
+    public CreateEnrollmentCommandHandler(
+        ICurrentUserService currentUserService,
+        ICourseRepository courseRepository,
+        IStudentRepository studentRepository,
+        IEnrollmentRepository enrollmentRepository)
     {
         _currentUserService = currentUserService;
         _courseRepository = courseRepository;
@@ -23,10 +25,11 @@ public class EnrollmentService : IEnrollmentService
         _enrollmentRepository = enrollmentRepository;
     }
 
-    public async Task<bool> CreateAsync(EnrollmentInputDto input)
+    public async Task Handle(CreateEnrollmentCommand request, CancellationToken cancellationToken)
     {
         var isAdmin = _currentUserService.IsInRole(UserRole.Admin);
         var isStudent = _currentUserService.IsInRole(UserRole.Student);
+        
         if (!isStudent && !isAdmin)
         {
             throw new NotAllowedException("Apenas estudantes e administradores podem criar matrículas!");
@@ -38,10 +41,13 @@ public class EnrollmentService : IEnrollmentService
             throw new NotAllowedException("Email do usuário não encontrado!");
         }
 
-        var student = isAdmin ? await _studentRepository.GetByIdAsync(input.StudentId) : await _studentRepository.GetByEmailAsync(userEmail);
+        var student = isAdmin 
+            ? await _studentRepository.GetByIdAsync(request.StudentId) 
+            : await _studentRepository.GetByEmailAsync(userEmail);
+            
         if (student == null)
         {
-            throw new NotAllowedException("Estudante não encontrado!");
+            throw new NotFoundException("Estudante não encontrado!");
         }
 
         if (!await _studentRepository.StudentIsActiveAsync(student))
@@ -49,16 +55,16 @@ public class EnrollmentService : IEnrollmentService
             throw new NotAllowedException("Estudante não está ativo!");
         }
 
-        var course = await _courseRepository.GetByIdAsync(input.CourseId);
+        var course = await _courseRepository.GetByIdAsync(request.CourseId);
         if (course == null)
         {
-            throw new NotAllowedException("Curso não encontrado!");
+            throw new NotFoundException("Curso não encontrado!");
         }
 
         var existingEnrollment = await _enrollmentRepository.GetByStudentCourseAsync(student.StudentId, course.CourseId);
         if (existingEnrollment != null)
         {
-            throw new NotAllowedException("Estudante já está matriculado neste curso!");
+            throw new ConflictException("Estudante já está matriculado neste curso!");
         }
 
         Enrollment enrollment = new Enrollment
@@ -69,7 +75,5 @@ public class EnrollmentService : IEnrollmentService
         };
         
         await _enrollmentRepository.AddAsync(enrollment);
-
-        return true;
     }
 }
