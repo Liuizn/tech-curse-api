@@ -1,9 +1,9 @@
-﻿using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Distributed;
 using StackExchange.Redis;
 using System.Text.Json;
 using tech_curse_api.src.Application.Interfaces;
 
-namespace tech_curse_api.src.Application.Services;
+namespace tech_curse_api.src.Infrastructure.ExternalServices;
 
 public class RedisCacheService : ICacheService
 {

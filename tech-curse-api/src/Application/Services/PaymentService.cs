@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using tech_curse_api.src.Application.DTOs;
 using tech_curse_api.src.Application.Factory;
 using tech_curse_api.src.Application.Interfaces;

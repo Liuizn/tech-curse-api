@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -8,7 +9,7 @@ using tech_curse_api.src.Application.DTOs;
 using tech_curse_api.src.Application.Interfaces;
 using tech_curse_api.src.Domain.Exceptions;
 
-namespace tech_curse_api.src.Application.Services;
+namespace tech_curse_api.src.Infrastructure.Identity;
 
 public class TokenService : ITokenService
 {

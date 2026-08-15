@@ -1,11 +1,11 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 using System.Text.Json;
 using tech_curse_api.src.Application.DTOs;
 using tech_curse_api.src.Application.Interfaces;
 using tech_curse_api.src.Domain.Exceptions;
 
-namespace tech_curse_api.src.Application.Services;
+namespace tech_curse_api.src.Infrastructure.Identity;
 
 public class AuthService : IAuthService
 {

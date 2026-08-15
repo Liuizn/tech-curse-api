@@ -1,5 +1,4 @@
-﻿ using Microsoft.AspNetCore.Identity;
-using StackExchange.Redis;
+ using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 using tech_curse_api.src.Application.DTOs;
 using tech_curse_api.src.Application.Interfaces;
