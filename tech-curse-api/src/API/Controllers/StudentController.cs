@@ -8,6 +8,7 @@ using tech_curse_api.src.Application.Features.Students.Commands.CreateStudent;
 using tech_curse_api.src.Application.Features.Students.Queries.GetStudents;
 using tech_curse_api.src.Application.Features.Students.Queries.GetStudentById;
 using tech_curse_api.src.Application.Features.Students.Queries.GetStudentEnrollments;
+using tech_curse_api.src.Application.Features.Students.Queries.GetSelfStudent;
 
 namespace tech_curse_api.src.API.Controllers;
 
@@ -104,8 +105,8 @@ public class StudentController : ControllerBase
     [SwaggerResponse(StatusCodes.Status403Forbidden, "Acesso negado.", typeof(ProblemDetails))]
     public async Task<IActionResult> GetSelf()
     {
-        var result = await _studentService.GetSelfAsync();
-
+        var query = new GetSelfStudentQuery();
+        var result = await _mediator.Send(query);
         return Ok(result);
     }
 
