@@ -12,7 +12,6 @@ namespace tech_curse_api.src.Application
     {
         public static IServiceCollection AddApplication(this IServiceCollection services)
         {
-            services.AddScoped<IStudentService, StudentService>();
             services.AddScoped<IEnrollmentService, EnrollmentService>();
             services.AddScoped<IPaymentService, PaymentService>();
 

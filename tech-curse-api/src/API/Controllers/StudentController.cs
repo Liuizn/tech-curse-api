@@ -21,12 +21,10 @@ namespace tech_curse_api.src.API.Controllers;
 [Tags("Students")]
 public class StudentController : ControllerBase
 {
-    private readonly IStudentService _studentService;
     private readonly IMediator _mediator;
 
-    public StudentController(IStudentService studentService, IMediator mediator)
+    public StudentController(IMediator mediator)
     {
-        _studentService = studentService;
         _mediator = mediator;
     }
 
