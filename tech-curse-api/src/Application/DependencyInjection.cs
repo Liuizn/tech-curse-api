@@ -3,7 +3,6 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 using tech_curse_api.src.Application.Factory;
 using tech_curse_api.src.Application.Interfaces;
-using tech_curse_api.src.Application.Services;
 using tech_curse_api.src.Application.Strategies;
 
 namespace tech_curse_api.src.Application
