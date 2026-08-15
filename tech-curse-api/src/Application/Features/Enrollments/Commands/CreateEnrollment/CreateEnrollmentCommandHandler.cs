@@ -29,7 +29,7 @@ public class CreateEnrollmentCommandHandler : IRequestHandler<CreateEnrollmentCo
     {
         var isAdmin = _currentUserService.IsInRole(UserRole.Admin);
         var isStudent = _currentUserService.IsInRole(UserRole.Student);
-        
+
         if (!isStudent && !isAdmin)
         {
             throw new NotAllowedException("Apenas estudantes e administradores podem criar matrículas!");
@@ -41,10 +41,10 @@ public class CreateEnrollmentCommandHandler : IRequestHandler<CreateEnrollmentCo
             throw new NotAllowedException("Email do usuário não encontrado!");
         }
 
-        var student = isAdmin 
-            ? await _studentRepository.GetByIdAsync(request.StudentId) 
+        var student = isAdmin
+            ? await _studentRepository.GetByIdAsync(request.StudentId)
             : await _studentRepository.GetByEmailAsync(userEmail);
-            
+
         if (student == null)
         {
             throw new NotFoundException("Estudante não encontrado!");
@@ -73,7 +73,7 @@ public class CreateEnrollmentCommandHandler : IRequestHandler<CreateEnrollmentCo
             CourseId = course.CourseId,
             DataMatricula = DateTime.UtcNow
         };
-        
+
         await _enrollmentRepository.AddAsync(enrollment);
     }
 }
