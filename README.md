@@ -32,48 +32,56 @@ A solução foi projetada desacoplando estritamente as responsabilidades de neg�
 
 ```mermaid
 flowchart TD
-    subgraph ClientLayer [🌐 Clientes]
-        Web[Web App / Frontend]
-        Mobile[Mobile App]
-        Postman[Postman / Swagger UI]
+    subgraph ClientLayer ["🌐 Clientes"]
+        Web["Web App / Frontend"]
+        Mobile["Mobile App"]
+        Postman["Postman / Swagger UI"]
     end
 
-    subgraph APILayer [🚀 Camada de Apresentação - API]
-        Controllers[API Controllers\nAuth, Courses, Students, Enrollments, Payments]
-        MiddlewareStack[Middlewares de Pipeline\nExceptionHandling | CorrelationId | IdempotencyFilter]
+    subgraph APILayer ["🚀 Camada de Apresentação - API"]
+        Controllers["API Controllers<br/>(Auth, Courses, Students, Enrollments, Payments)"]
+        MiddlewareStack["Middlewares de Pipeline<br/>(ExceptionHandling, CorrelationId, IdempotencyFilter)"]
     end
 
-    subgraph AppLayer [⚡ Camada de Aplicação - CQRS & Vertical Slices]
-        PipelineBehaviors[MediatR Pipeline Behaviors\nValidationBehavior]
-        Commands[Command Handlers\nCreate / Update / Delete / Process / Refund]
-        Queries[Query Handlers\nGetPaged / GetById / GetSelf / GetByFilter]
-        Validators[FluentValidation Validators\nRegras Determinísticas]
+    subgraph AppLayer ["⚡ Camada de Aplicação - CQRS & Vertical Slices"]
+        PipelineBehaviors["MediatR Pipeline Behaviors<br/>(ValidationBehavior)"]
+        Commands["Command Handlers<br/>(Create, Update, Delete, Process, Refund)"]
+        Queries["Query Handlers<br/>(GetPaged, GetById, GetSelf, GetByFilter)"]
+        Validators["FluentValidation Validators<br/>(Regras Determinísticas)"]
     end
 
-    subgraph DomainLayer [💎 Camada de Domínio - Core]
-        Entities[Entidades de Domínio\nCourse, Student, Enrollment, Payment]
-        Enums[Enums de Negócio\nPaymentStatus, PaymentType, UserRole]
-        Specs[Domain Specifications\nPaymentProcessableSpecification]
-        DomainExceptions[Exceções de Domínio\nNotFound, Conflict, Validation, Business]
+    subgraph DomainLayer ["💎 Camada de Domínio - Core"]
+        Entities["Entidades de Domínio<br/>(Course, Student, Enrollment, Payment)"]
+        Enums["Enums de Negócio<br/>(PaymentStatus, PaymentType, UserRole)"]
+        Specs["Domain Specifications<br/>(PaymentProcessableSpecification)"]
+        DomainExceptions["Exceções de Domínio<br/>(NotFound, Conflict, Validation, Business)"]
     end
 
-    subgraph InfraLayer [🔌 Camada de Infraestrutura]
-        EFCore[EF Core 10 & TechCurseContext]
-        Repositories[Repositórios Especializados\nCourse, Student, Enrollment, Payment]
-        RedisCache[(Redis Cache\nIdempotência & Paging)]
-        SQLServer[(SQL Server 2022\nBanco Relacional)]
-        GatewayAdapter[Payment Gateway Adapter\nEstratégias de Cobrança]
-        IdentityService[ASP.NET Core Identity & JWT Provider]
-        Logging[Serilog & Seq Sink]
+    subgraph InfraLayer ["🔌 Camada de Infraestrutura"]
+        EFCore["EF Core 10 & TechCurseContext"]
+        Repositories["Repositórios Especializados<br/>(Course, Student, Enrollment, Payment)"]
+        RedisCache[("Redis Cache<br/>(Idempotência & Paging)")]
+        SQLServer[("SQL Server 2022<br/>(Banco Relacional)")]
+        GatewayAdapter["Payment Gateway Adapter<br/>(Estratégias de Cobrança)"]
+        IdentityService["ASP.NET Core Identity & JWT Provider"]
+        Logging["Serilog & Seq Sink"]
     end
 
     ClientLayer --> Controllers
     Controllers --> MiddlewareStack
     MiddlewareStack --> PipelineBehaviors
     PipelineBehaviors --> Validators
-    PipelineBehaviors --> Commands & Queries
-    Commands & Queries --> Entities & Specs & DomainExceptions
-    Commands & Queries --> Repositories & RedisCache & GatewayAdapter
+    PipelineBehaviors --> Commands
+    PipelineBehaviors --> Queries
+    Commands --> Entities
+    Commands --> Specs
+    Commands --> DomainExceptions
+    Queries --> Entities
+    Commands --> Repositories
+    Commands --> RedisCache
+    Commands --> GatewayAdapter
+    Queries --> Repositories
+    Queries --> RedisCache
     Repositories --> EFCore --> SQLServer
     Controllers -.-> IdentityService
     MiddlewareStack -.-> Logging
