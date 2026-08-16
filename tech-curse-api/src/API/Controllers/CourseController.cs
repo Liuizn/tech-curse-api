@@ -1,8 +1,14 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using tech_curse_api.src.Application.DTOs;
 using tech_curse_api.src.Application.Interfaces;
+using MediatR;
+using tech_curse_api.src.Application.Features.Courses.Commands.CreateCourse;
+using tech_curse_api.src.Application.Features.Courses.Queries.GetCourses;
+using tech_curse_api.src.Application.Features.Courses.Queries.GetCourseById;
+using tech_curse_api.src.Application.Features.Courses.Commands.UpdateCourse;
+using tech_curse_api.src.Application.Features.Courses.Commands.DeleteCourse;
 
 namespace tech_curse_api.src.API.Controllers;
 
@@ -13,11 +19,11 @@ namespace tech_curse_api.src.API.Controllers;
 [Tags("Courses")]
 public class CourseController : ControllerBase
 {
-    private readonly ICourseService _courseService;
+    private readonly IMediator _mediator;
 
-    public CourseController(ICourseService courseService)
+    public CourseController(IMediator mediator)
     {
-        _courseService = courseService;
+        _mediator = mediator;
     }
 
     [HttpPost]
@@ -30,9 +36,9 @@ public class CourseController : ControllerBase
     [SwaggerResponse(StatusCodes.Status401Unauthorized, "Usuário não autenticado.", typeof(ProblemDetails))]
     [SwaggerResponse(StatusCodes.Status403Forbidden, "Acesso negado.", typeof(ProblemDetails))]
     [SwaggerResponse(StatusCodes.Status422UnprocessableEntity, "Erro de validação.", typeof(ProblemDetails))]
-    public async Task<IActionResult> Post([FromBody] CoursePostDto input)
+    public async Task<IActionResult> Post([FromBody] CreateCourseCommand command)
     {
-        var result = await _courseService.CreateAsync(input);
+        var result = await _mediator.Send(command);
 
         return CreatedAtAction(nameof(Get), new { id = result.Id }, result);
     }
@@ -47,7 +53,7 @@ public class CourseController : ControllerBase
     [SwaggerResponse(StatusCodes.Status401Unauthorized, "Usuário não autenticado.", typeof(ProblemDetails))]
     public async Task<IActionResult> GetAll([FromQuery] CoursePaginationParamsDto searchParams)
     {
-        var result = await _courseService.GetPagedAsync(searchParams);
+        var result = await _mediator.Send(new GetCoursesQuery(searchParams));
         return Ok(result);
     }
 
@@ -62,9 +68,8 @@ public class CourseController : ControllerBase
     [SwaggerResponse(StatusCodes.Status404NotFound, "Curso não encontrado.", typeof(ProblemDetails))]
     public async Task<IActionResult> Get(int id)
     {
-        var result = await _courseService.GetByIdAsync(id);
-
-        return result is not null ? Ok(result) : NotFound();
+        var result = await _mediator.Send(new GetCourseByIdQuery(id));
+        return Ok(result);
     }
 
     [HttpPut("{id}")]
@@ -79,11 +84,9 @@ public class CourseController : ControllerBase
     [SwaggerResponse(StatusCodes.Status404NotFound, "Curso não encontrado.", typeof(ProblemDetails))]
     public async Task<IActionResult> Put(int id, [FromBody] CoursePostDto input)
     {
-        CoursePutDto dto = new CoursePutDto(id, input.Titulo, input.Descricao, input.Categoria, input.CargaHoraria);
-
-        var result = await _courseService.UpdateAsync(dto);
-
-        return result ? NoContent() : NotFound();
+        var command = new UpdateCourseCommand(id, input.Titulo, input.Descricao, input.Categoria, input.CargaHoraria);
+        await _mediator.Send(command);
+        return NoContent();
     }
 
     [HttpDelete("{id}")]
@@ -99,8 +102,8 @@ public class CourseController : ControllerBase
     [SwaggerResponse(StatusCodes.Status409Conflict, "Conflito. O curso possui matrículas ativas.", typeof(ProblemDetails))]
     public async Task<IActionResult> Delete(int id)
     {
-        var result = await _courseService.DeleteAsync(id);
-
-        return result ? NoContent() : NotFound();
+        var command = new DeleteCourseCommand(id);
+        await _mediator.Send(command);
+        return NoContent();
     }
 }

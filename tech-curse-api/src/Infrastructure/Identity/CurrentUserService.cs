@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 using tech_curse_api.src.Application.Interfaces;
 using tech_curse_api.src.Domain.Enums;
 

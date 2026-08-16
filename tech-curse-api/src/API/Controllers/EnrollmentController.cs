@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using tech_curse_api.src.Application.DTOs;
-using tech_curse_api.src.Application.Interfaces;
+using tech_curse_api.src.Application.Features.Enrollments.Commands.CreateEnrollment;
+using MediatR;
 
 namespace tech_curse_api.src.API.Controllers;
 
@@ -13,11 +14,11 @@ namespace tech_curse_api.src.API.Controllers;
 [Tags("Enrollments")]
 public class EnrollmentController : ControllerBase
 {
-    private readonly IEnrollmentService _enrollmentService;
+    private readonly IMediator _mediator;
 
-    public EnrollmentController(IEnrollmentService enrollmentService)
+    public EnrollmentController(IMediator mediator)
     {
-        _enrollmentService = enrollmentService;
+        _mediator = mediator;
     }
 
     [HttpPost]
@@ -28,11 +29,14 @@ public class EnrollmentController : ControllerBase
     )]
     [SwaggerResponse(StatusCodes.Status202Accepted, "Aluno matriculado com sucesso.")]
     [SwaggerResponse(StatusCodes.Status401Unauthorized, "Usuário não autenticado.", typeof(ProblemDetails))]
+    [SwaggerResponse(StatusCodes.Status403Forbidden, "Acesso negado.", typeof(ProblemDetails))]
     [SwaggerResponse(StatusCodes.Status404NotFound, "Aluno ou Curso não encontrados.", typeof(ProblemDetails))]
     [SwaggerResponse(StatusCodes.Status409Conflict, "Aluno já está matriculado neste curso.", typeof(ProblemDetails))]
+    [SwaggerResponse(StatusCodes.Status422UnprocessableEntity, "Erro de validação.", typeof(ProblemDetails))]
     public async Task<IActionResult> Post([FromBody] EnrollmentInputDto input)
     {
-        var actionResult = await _enrollmentService.CreateAsync(input);
+        var command = new CreateEnrollmentCommand(input.StudentId, input.CourseId);
+        await _mediator.Send(command);
 
         return Accepted("Aluno matriculado com sucesso.");
     }

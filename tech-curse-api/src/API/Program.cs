@@ -1,45 +1,16 @@
-using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
 using tech_curse_api.src.API.Configuration;
 using tech_curse_api.src.API.Middleware;
-using tech_curse_api.src.Application.Factory;
-using tech_curse_api.src.Application.Interfaces;
-using tech_curse_api.src.Application.Services;
-using tech_curse_api.src.Application.Strategies;
+using tech_curse_api.src.Application;
+using tech_curse_api.src.Infrastructure;
 using tech_curse_api.src.Infrastructure.Data;
-using tech_curse_api.src.Infrastructure.ExternalServices;
-using tech_curse_api.src.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
-builder.Services.AddScoped<ICourseRepository, CourseRepository>();
-builder.Services.AddScoped<IStudentRepository, StudentRepository>();
-builder.Services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
-builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
-
-builder.Services.AddScoped<ICourseService, CourseService>();
-builder.Services.AddScoped<IStudentService, StudentService>();
-builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
-builder.Services.AddScoped<IPaymentService, PaymentService>();
-
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddScoped<ICacheService, RedisCacheService>();
-
-if (builder.Environment.IsProduction())
-{
-    
-}
-else
-{
-    builder.Services.AddScoped<IPaymentGatewayAdapter, SimulatedPaymentGatewayAdapter>();
-}
-
-builder.Services.AddScoped<IPaymentStrategy, CreditCardPaymentStrategy>();
-
-builder.Services.AddScoped<PaymentStrategyFactory>();
+// Add services to the container from each layer
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration, builder.Environment);
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -85,7 +56,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         dbContext.Database.Migrate();
-        
+
         await DbInitializer.SeedDataAsync(services);
     }
     catch (Exception ex)
@@ -96,3 +67,6 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+
+public partial class Program { }
+

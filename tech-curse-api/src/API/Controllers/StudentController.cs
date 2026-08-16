@@ -1,8 +1,16 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using tech_curse_api.src.Application.DTOs;
 using tech_curse_api.src.Application.Interfaces;
+using MediatR;
+using tech_curse_api.src.Application.Features.Students.Commands.CreateStudent;
+using tech_curse_api.src.Application.Features.Students.Queries.GetStudents;
+using tech_curse_api.src.Application.Features.Students.Queries.GetStudentById;
+using tech_curse_api.src.Application.Features.Students.Queries.GetStudentEnrollments;
+using tech_curse_api.src.Application.Features.Students.Queries.GetSelfStudent;
+using tech_curse_api.src.Application.Features.Students.Commands.UpdateStudent;
+using tech_curse_api.src.Application.Features.Students.Commands.DeleteStudent;
 
 namespace tech_curse_api.src.API.Controllers;
 
@@ -13,11 +21,11 @@ namespace tech_curse_api.src.API.Controllers;
 [Tags("Students")]
 public class StudentController : ControllerBase
 {
-    private readonly IStudentService _studentService;
+    private readonly IMediator _mediator;
 
-    public StudentController(IStudentService studentService)
+    public StudentController(IMediator mediator)
     {
-        _studentService = studentService;
+        _mediator = mediator;
     }
 
     [HttpPost]
@@ -33,8 +41,8 @@ public class StudentController : ControllerBase
     [SwaggerResponse(StatusCodes.Status422UnprocessableEntity, "Erro de validação.", typeof(ProblemDetails))]
     public async Task<IActionResult> Post([FromBody] StudentPostDto input)
     {
-        var result = await _studentService.CreateAsync(input);
-
+        var command = new CreateStudentCommand(input.Nome, input.Email);
+        var result = await _mediator.Send(command);
         return CreatedAtAction(nameof(Get), new { id = result.Id }, result);
     }
 
@@ -49,7 +57,8 @@ public class StudentController : ControllerBase
     [SwaggerResponse(StatusCodes.Status403Forbidden, "Acesso negado.", typeof(ProblemDetails))]
     public async Task<IActionResult> GetAll([FromQuery]PaginationParamsDto searchParams)
     {
-        var result = await _studentService.GetPagedAsync(searchParams);
+        var query = new GetStudentsQuery(searchParams);
+        var result = await _mediator.Send(query);
         return Ok(result);
     }
 
@@ -64,9 +73,9 @@ public class StudentController : ControllerBase
     [SwaggerResponse(StatusCodes.Status404NotFound, "Estudante não encontrado.", typeof(ProblemDetails))]
     public async Task<IActionResult> Get(int id)
     {
-        var result = await _studentService.GetByIdAsync(id);
-
-        return result is not null ? Ok(result) : NotFound();
+        var query = new GetStudentByIdQuery(id);
+        var result = await _mediator.Send(query);
+        return Ok(result);
     }
 
     [HttpGet("{id}/enrollments")]
@@ -80,9 +89,9 @@ public class StudentController : ControllerBase
     [SwaggerResponse(StatusCodes.Status404NotFound, "Estudante não encontrado.", typeof(ProblemDetails))]
     public async Task<IActionResult> GetEnrollments(int id)
     {
-        var result = await _studentService.GetCoursesAsync(id);
-
-        return result is not null ? Ok(result) : NotFound();
+        var query = new GetStudentEnrollmentsQuery(id);
+        var result = await _mediator.Send(query);
+        return Ok(result);
     }
 
     [HttpGet("me")]
@@ -96,8 +105,8 @@ public class StudentController : ControllerBase
     [SwaggerResponse(StatusCodes.Status403Forbidden, "Acesso negado.", typeof(ProblemDetails))]
     public async Task<IActionResult> GetSelf()
     {
-        var result = await _studentService.GetSelfAsync();
-
+        var query = new GetSelfStudentQuery();
+        var result = await _mediator.Send(query);
         return Ok(result);
     }
 
@@ -113,11 +122,9 @@ public class StudentController : ControllerBase
     [SwaggerResponse(StatusCodes.Status422UnprocessableEntity, "Erro de validação.", typeof(ProblemDetails))]
     public async Task<IActionResult> Put(int id, [FromBody] StudentPutDto input)
     {
-        StudentPutDto dto = new StudentPutDto(input.Nome);
-
-        var result = await _studentService.UpdateAsync(id, dto);
-
-        return result ? NoContent() : NotFound();
+        var command = new UpdateStudentCommand(id, input.Nome);
+        await _mediator.Send(command);
+        return NoContent();
     }
 
     [HttpDelete("{id}")]
@@ -132,8 +139,8 @@ public class StudentController : ControllerBase
     [SwaggerResponse(StatusCodes.Status404NotFound, "Estudante não encontrado.", typeof(ProblemDetails))]
     public async Task<IActionResult> Delete(int id)
     {
-        var result = await _studentService.DeleteAsync(id);
-
-        return result ? NoContent() : NotFound();
+        var command = new DeleteStudentCommand(id);
+        await _mediator.Send(command);
+        return NoContent();
     }
 }

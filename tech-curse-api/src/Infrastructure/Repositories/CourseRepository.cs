@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using tech_curse_api.src.Application.DTOs;
 using tech_curse_api.src.Application.Interfaces;
 using tech_curse_api.src.Domain.Entities;
@@ -78,5 +78,10 @@ public class CourseRepository : ICourseRepository
     {
         _context.Courses.Remove(course);
         await _context.SaveChangesAsync();
+    }
+
+    public async Task<bool> HasEnrollmentsAsync(int courseId)
+    {
+        return await _context.Enrollments.AnyAsync(e => e.CourseId == courseId);
     }
 }
