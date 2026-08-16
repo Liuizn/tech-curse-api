@@ -4,6 +4,7 @@ using System.Reflection;
 using tech_curse_api.src.Application.Factory;
 using tech_curse_api.src.Application.Interfaces;
 using tech_curse_api.src.Application.Strategies;
+using tech_curse_api.src.Application.Common.Behaviors;
 
 namespace tech_curse_api.src.Application
 {
@@ -15,9 +16,12 @@ namespace tech_curse_api.src.Application
             services.AddScoped<PaymentStrategyFactory>();
 
             // Configurar MediatR e FluentValidation para a migração CQRS
-            services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
+            services.AddMediatR(cfg =>
+            {
+                cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
+                cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
+            });
             services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
-            services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(tech_curse_api.src.Application.Common.Behaviors.ValidationBehavior<,>));
 
             return services;
         }
