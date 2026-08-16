@@ -1,15 +1,14 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Text;
 using System.Text.Json;
 using tech_curse_api.src.Application.DTOs;
 using tech_curse_api.src.Domain.Entities;
 using tech_curse_api.src.Domain.Enums;
+using Xunit;
 
-namespace ScreenSound.Tests.Integracao;
+namespace tech_curse_api.Test.Integration;
 
-[Trait("Categoria", "Integração")]
+[Trait("Category", "Integration")]
 public class PaymentAPITest
 {
     private static HttpClient CreateClient(Func<HttpRequestMessage, HttpResponseMessage> handler, Uri? baseAddress = null)
@@ -42,11 +41,11 @@ public class PaymentAPITest
             p.CreatedAt,
             p.PaidAt,
             p.ExternalTransactionId
-        ));
+        )).ToList();
 
         var responseObject = new PagedResultDto<PaymentOutputDto>(
             paymentsOutputDto,
-            paymentsOutputDto.Count(),
+            paymentsOutputDto.Count,
             1,
             10
         );
@@ -71,41 +70,34 @@ public class PaymentAPITest
 
         //Assert
         Assert.NotNull(response);
-
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
+        var contentString = await response.Content.ReadAsStringAsync();
         var pagedResponse = JsonSerializer.Deserialize<PagedResultDto<PaymentOutputDto>>(
-            response.Content.ReadAsStringAsync().Result,
+            contentString,
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
         );
 
-        Assert.Equal(paymentsOutputDto.Count(), pagedResponse.TotalCount);
+        Assert.NotNull(pagedResponse);
+        Assert.Equal(paymentsOutputDto.Count, pagedResponse!.TotalCount);
 
-        var responseContent = pagedResponse.Items;
+        var responseContent = pagedResponse.Items.ToList();
 
-        for (int i = 0; i < paymentsOutputDto.Count(); i++)
+        for (int i = 0; i < paymentsOutputDto.Count; i++)
         {
-            Assert.Equal(paymentsOutputDto.ElementAt(i).PaymentId, responseContent.ElementAt(i).PaymentId);
-            Assert.Equal(paymentsOutputDto.ElementAt(i).EnrollmentId, responseContent.ElementAt(i).EnrollmentId);
-            Assert.Equal(paymentsOutputDto.ElementAt(i).StudentId, responseContent.ElementAt(i).StudentId);
-            Assert.Equal(paymentsOutputDto.ElementAt(i).Amount, responseContent.ElementAt(i).Amount);
-            Assert.Equal(paymentsOutputDto.ElementAt(i).Status, responseContent.ElementAt(i).Status);
-            Assert.Equal(paymentsOutputDto.ElementAt(i).IsActive, responseContent.ElementAt(i).IsActive);
-            Assert.Equal(paymentsOutputDto.ElementAt(i).CreatedAt, responseContent.ElementAt(i).CreatedAt);
-            Assert.Equal(paymentsOutputDto.ElementAt(i).PaidAt, responseContent.ElementAt(i).PaidAt);
-            Assert.Equal(paymentsOutputDto.ElementAt(i).ExternalTransactionId, responseContent.ElementAt(i).ExternalTransactionId);
+            Assert.Equal(paymentsOutputDto[i].PaymentId, responseContent[i].PaymentId);
+            Assert.Equal(paymentsOutputDto[i].EnrollmentId, responseContent[i].EnrollmentId);
+            Assert.Equal(paymentsOutputDto[i].StudentId, responseContent[i].StudentId);
+            Assert.Equal(paymentsOutputDto[i].Amount, responseContent[i].Amount);
+            Assert.Equal(paymentsOutputDto[i].Status, responseContent[i].Status);
+            Assert.Equal(paymentsOutputDto[i].IsActive, responseContent[i].IsActive);
+            Assert.Equal(paymentsOutputDto[i].CreatedAt, responseContent[i].CreatedAt);
+            Assert.Equal(paymentsOutputDto[i].PaidAt, responseContent[i].PaidAt);
+            Assert.Equal(paymentsOutputDto[i].ExternalTransactionId, responseContent[i].ExternalTransactionId);
         }
 
         Assert.Equal(1, pagedResponse.PageNumber);
         Assert.Equal(10, pagedResponse.PageSize);
         Assert.Equal(1, pagedResponse.TotalPages);
-    }
-
-    private sealed class FuncHandler : HttpMessageHandler
-    {
-        private readonly Func<HttpRequestMessage, HttpResponseMessage> _responder;
-        public FuncHandler(Func<HttpRequestMessage, HttpResponseMessage> responder) => _responder = responder;
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-            => Task.FromResult(_responder(request));
     }
 }
